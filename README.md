@@ -1,2 +1,2 @@
 # wp-optimize-images-and-preserve-quality
-This plugin allows optimizing by adjusting the compression rate and sharpening resized images to preserve their original quality
+This plugin optimizes the images uploaded/added to the media library by allowing admins to adjust the compression rate and sharpening the resized images to preserve their original quality.
