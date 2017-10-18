@@ -1,4 +1,4 @@
-# wp-image-optimization-compression-and-sharpening-helpers
+# Image Optimization, Compression and Sharpening Helpers
 This plugin offers to following features and optimization capabilities:
 - Adjust the image compression rate.
 - Apply a sharpening filter to compensate for the quality loss occuring when WordPress resizes images.
