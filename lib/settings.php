@@ -1,0 +1,445 @@
+<?php
+/**
+ * Ultimate Image Optimization Helpers Plugin - settings functions
+ *
+ * Contains settings page related functions.
+ *
+ * @package Ultimate Image Optimization Helpers Plugin
+ */
+
+if( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
+
+/**
+ * Set up and load our class.
+ */
+class HDEV_OPTIMG_Settings
+{
+
+	/**
+	 * Load our hooks and filters.
+	 *
+	 * @return void
+	 */
+	public function init() {
+		add_action( 'admin_init',                   array( $this, 'load_settings'       )           );
+	}
+
+	/**
+	 * Register our new settings and load our settings fields.
+	 *
+	 * @return void
+	 */
+	public function load_settings() {
+
+		// Add our setting for the serialized array of items in the default optimization.
+		register_setting( 'media', 'hdev_optimg', array( $this, 'data_sanitize' ) );
+
+        /** Create our setting sections, hooked into the "media" section. */
+        // Display extra image sizes set by plugins & themes
+        add_settings_section( 'hdev_plugin_theme_image_sizes', __( 'Image Sizes Added by Theme/Plugins', 'hdev-l10i-optimg' ), array( $this, 'settings_plugin_theme_image_sizes' ), 'media' );
+        // Optimization settings
+		add_settings_section( 'hdev_optimg', __( 'Image Optimization Settings', 'hdev-l10i-optimg' ), array( $this, 'settings_optimg' ), 'media' );
+	}
+
+    /**
+     * Our settings section.
+     *
+     * @param  array $args  The arguments from the `add_settings_section` call.
+     */
+    public function settings_plugin_theme_image_sizes( $args ) {
+
+        // Get all image sizes
+        $image_sizes = HDEV_OPTIMG_Helper::get_image_sizes( true );
+
+        // Add a div to wrap our whole thing for clean.
+        echo '<div class="' . esc_attr( $args['id'] ) . '-wrap">';
+
+            // Add our intro content.
+            echo '<p>' . esc_html__( 'The sizes listed below determine additional maximum dimensions in pixels added by the current theme and/or plugins to use when adding an image to the Media Library.' , 'hdev-l10i-optimg' ) . '</p>';
+
+            // Now set up the table with each value.
+            echo '<table id="' . esc_attr( $args['id'] ) . '" class="hdev-optimg-settings-table form-table">';
+            echo '<tbody>';
+
+
+            // Init ID count
+            $ID_i = 1;
+            foreach( $image_sizes as $size_name => $image_size ) {
+
+                // Init cropped image message
+                $crop_message  = '';
+                // Generate cropped image message conditionally
+                if( $image_size['crop'] ) {
+
+                    $crop_message .= '<br><label style="cursor:auto;" for="hdev-optimg-image-sizes' . $ID_i . '_crop">';
+                    $crop_message .= $image_size['width'] != $image_size['height'] ? esc_html__( 'This image is cropped to exact dimensions.', 'hdev-l10i-optimg' ) : esc_html__( 'This image is cropped to exact dimensions and is proportional.', 'hdev-l10i-optimg' );
+                    $crop_message .= '</label>';
+                }
+
+                // Our additional image sizes field.
+                echo '<tr>';
+
+                    // The field label.
+                    echo '<th scope="row">';
+                    echo esc_html__( $size_name, 'hdev-l10i-optimg' );
+                    echo '</th>';
+
+                    // The input fields.
+                    echo '<td class="hdev-optimg-image-sizes" style="vertical-align:top;">';
+
+                        echo '<fieldset>';
+
+                            echo '<legend class="screen-reader-text"><span>' . esc_html__( $size_name, 'hdev-l10i-optimg' ) . '</span></legend>';
+
+                            echo '<label for="hdev-optimg-image-sizes-width">' . esc_html__( 'Max Width&nbsp;' ) . '</label>';
+
+                            echo '<input type="number" id="hdev-optimg-image-sizes-width' . $ID_i . '" name="hdev-optimg-image-sizes-width" value="' . $image_size['width'] . '" step="1" min="0" class="small-text" disabled>';
+                            echo '<label for="hdev-optimg-image-sizes-height">' . esc_html__( '&nbsp;Max Height&nbsp;' ) . '</label>';
+
+                            echo '<input type="number" id="hdev-optimg-image-sizes-height' . $ID_i . '" name="hdev-optimg-image-sizes-height" value="' . $image_size['height'] . '" step="1" min="0" class="small-text" disabled>';
+
+                            echo $crop_message;
+
+                        echo '</fieldset>';
+
+                    echo '</td>';
+
+                // Close our additional image sizes field.
+                echo '</tr>';
+
+                // Increment count
+                $ID_i++;
+            }
+
+                // Call our action to include any extra settings.
+                do_action( 'hdev_optimg_settings_plugin_theme_image_sizes_page', $args );
+
+            // Close the table.
+            echo '</tbody>';
+            echo '</table>';
+
+        echo '</div>';
+    }
+
+	/**
+	 * Our settings section.
+	 *
+	 * @param  array $args  The arguments from the `add_settings_section` call.
+	 */
+	public function settings_optimg( $args ) {
+
+	    // Get default optimization settings
+        $default_settings = HDEV_OPTIMG_Helper::get_optimization_defaults();
+
+        // Get preset optimization settings
+        $mode_preset_settings = HDEV_OPTIMG_Helper::get_optimization_mode_presets();
+
+        // Fetch the optimization options
+        $optimization_options = get_option( 'hdev_optimg' );
+
+		// Fetch our stored settings.
+        $mode  = HDEV_OPTIMG_Helper::get_single_option( $optimization_options, $default_settings['mode'], 'mode' );
+
+        $quality  = HDEV_OPTIMG_Helper::get_single_option( $optimization_options, $default_settings['quality'], 'quality' );
+
+        $quality_val  = HDEV_OPTIMG_Helper::get_single_option( $optimization_options, $default_settings['quality_val'], 'quality_val' );
+
+		$sharpen = HDEV_OPTIMG_Helper::get_single_option( $optimization_options, $default_settings['sharpen'], 'sharpen' ); // To save correct setting - use in data_sanitize function and checkbox value
+
+        $interlace  = HDEV_OPTIMG_Helper::get_single_option( $optimization_options, $default_settings['interlace'], 'interlace' );
+
+        $optimize_original  = HDEV_OPTIMG_Helper::get_single_option( $optimization_options, $default_settings['optimize_original'], 'optimize_original' );
+
+        $remove_metadata  = HDEV_OPTIMG_Helper::get_single_option( $optimization_options, $default_settings['remove_metadata'], 'remove_metadata' );
+
+        // To fix checkbox always checked - use with checked() function only
+        $sharpen_checkbox_check  = HDEV_OPTIMG_Helper::get_single_option_checkbox( $optimization_options, $default_settings['sharpen'], 'sharpen' );
+
+        // Modes visibility
+        $mode_hidden = $mode != 'advanced' ? 'style="display:none;"' : '';
+        $mode_hidden_class = $mode != 'advanced' ? ' hdev-toggled-hide' : '';
+
+        // Modes visibility
+        $quality_val_hidden = $quality != 'custom' ? 'style="display:none;"' : '';
+        $quality_val_hidden_class = $quality != 'custom' ? ' hdev-toggled-hide' : '';
+
+		// Set our settings for the WP_Editor call.
+		//$editor = HDEV_OPTIMG_Helper::get_wp_editor_args( 'hdev_optimg[text]' );
+
+		// Add a div to wrap our whole thing for clean.
+		echo '<div class="' . esc_attr( $args['id'] ) . '-wrap">';
+
+		    // Display error message if PHP Imagick not supported
+            if( ! HDEV_OPTIMG_Helper::test_imagick() ) {
+
+                echo '<div style="color:#a00;" class="hdev-admin-box"><p><strong>' . esc_html__( 'Warning! ' , 'hdev-l10i-optimg' ) . '</strong> ' . esc_html__( 'All image optimization features have been deactivated because your PHP environment does not support Imagick or your current version of Imagick does not support all the following methods: (clear, destroy, valid, getimage, writeimage, getimageblob, getimagegeometry, getimageformat, setimageformat, setimagecompression, setimagecompressionquality, setimagepage, setoption, setInterlaceScheme, setImageColorspace, scaleimage, cropimage, cropThumbnailImage, rotateimage, flipimage, flopimage, readimage, sharpenimage, stripImage).' , 'hdev-l10i-optimg' ) . '</p><p>' . esc_html__( 'Please contact your host or server administrator to resolve this issue.' , 'hdev-l10i-optimg' ) . '</p></div>';
+            } else {
+
+                // Add our intro content.
+                echo '<p>' . esc_html__( 'Easily optimize JPEG, PNG and GIF images for better quality and faster page load.' , 'hdev-l10i-optimg' ) . '</p>';
+
+                echo '<p><strong><u>' . esc_html__( 'Important Note' , 'hdev-l10i-optimg' ) . '</u></strong>: ' . esc_html__( 'New optimization settings will only affect future uploaded images.' , 'hdev-l10i-optimg' ) . '<br>' . esc_html__( 'To apply new optimizations to previously uploaded images, we recommend regenerating them using this plugin: ' , 'hdev-l10i-optimg' ) . ' <a href="https://wordpress.org/plugins/regenerate-thumbnails/" target="_blank">' . esc_html__('Regenerate Thumbnails', 'hdev-l10i-optimg' ) . '</a> ' . esc_html__('by Alex Mills', 'hdev-l10i-optimg' ) . '</p>';
+
+                // Now set up the table with each value.
+                echo '<table id="' . esc_attr( $args['id'] ) . '" class="hdev-optimg-settings-table form-table">';
+                echo '<tbody>';
+
+                    // Our mode checkbox field.
+                    /*echo '<tr id="hdev-optimg-mode-container">';
+
+                        // The field label.
+                        echo '<th scope="row">';
+                            echo esc_html__( 'Mode', 'hdev-l10i-optimg' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( '"Preset" - quickly configure the optimization engine for most use cases.', 'hdev-l10i-optimg' ) . '&#xa;&#8212;&#8212;&#8212;&#8212;&#xa;' . esc_html__( '"Advanced" - for expert, use if you need more control over the process.', 'hdev-l10i-optimg' ) . '"><span class="icon-help"></span></div>';
+                        echo '</th>';
+
+                        // The input field.
+                        echo '<td>';
+
+                            echo '<select id="hdev-optimg-mode" name="hdev_optimg[mode]">';
+                                echo '<option value="preset" ' . selected( $mode, 'preset', false ) . '>' . esc_html__( 'preset', 'hdev-l10i-optimg' ) . '</option>';
+                                echo '<option value="advanced" ' . selected( $mode, 'advanced', false ) . '>' . esc_html__( 'Advanced', 'hdev-l10i-optimg' ) . '</option>';
+                            echo '</select>';
+
+                        echo '</td>';
+
+                    // Close our mode radio field.
+                    echo '</tr>';*/
+
+                    // Our mode radio field.
+                    echo '<tr id="hdev-optimg-mode-container">';
+
+                        // The field label.
+                        echo '<th scope="row">';
+                            echo esc_html__( 'Mode', 'hdev-l10i-optimg' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'Choose the optimization preset that best match your use case, or go custom if you are an advanced user and know what you\'re doing.', 'hdev-l10i-optimg' ) . '"><span class="icon-help"></span></div>';
+                        echo '</th>';
+
+                        // The input field.
+                        echo '<td class="hdev-optimg-mode">';
+
+                            echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-mode-balanced">';
+                            echo '<input type="radio" id="hdev-optimg-mode-balanced" name="hdev_optimg[mode]" value="balanced" ' . checked( $mode, 'balanced', false ) . ' />';
+                            echo esc_html__( 'Balanced (recommended for most websites)', 'hdev-l10i-optimg' ) . '</label>';
+
+                            echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-mode-hd">';
+                            echo '<input type="radio" id="hdev-optimg-mode-hd" name="hdev_optimg[mode]" value="hd" ' . checked( $mode, 'hd', false ) . ' />';
+                            echo esc_html__( 'HD (high image quality | descent compression, recommended for image driven websites)', 'hdev-l10i-optimg' ) . '</label>';
+
+                            echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-mode-performance">';
+                            echo '<input type="radio" id="hdev-optimg-mode-performance" name="hdev_optimg[mode]" value="performance" ' . checked( $mode, 'performance', false ) . ' />';
+                            echo esc_html__( 'Performance (higher compression | lower image quality)', 'hdev-l10i-optimg' ) . '</label>';
+
+                            echo '<input type="radio" id="hdev-optimg-mode-advanced" name="hdev_optimg[mode]" value="advanced" ' . checked( $mode, 'advanced', false ) . ' />';
+                            echo esc_html__( 'Custom', 'hdev-l10i-optimg' ) . ' (' .esc_html__( 'for advanced users', 'hdev-l10i-optimg' ) . ')' . '</label>';
+
+                        echo '</td>';
+
+                    // Close our mode radio field.
+                    echo '</tr>';
+
+                    // Our quality radio field.
+                    echo '<tr class="hdev-optimg-mode-target' . $mode_hidden_class . '" ' . $mode_hidden . '>';
+
+                        // The field label.
+                        echo '<th scope="row">';
+                        echo esc_html__( 'Quality', 'hdev-l10i-optimg' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'Lower quality settings reduce file size and improves page load. However,  bear in mind that quality loss starts to become obvious to the eye bellow the recommended value of 77.', 'hdev-l10i-optimg' ) . '"><span class="icon-help"></span></div>';
+                        echo '</th>';
+
+                        // The input field.
+                        echo '<td id="hdev-optimg-quality">';
+
+                            echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-quality-high">';
+                            echo '<input class="hdev-customQualityInput-trigger" type="radio" id="hdev-optimg-quality-high" name="hdev_optimg[quality]" value="high" ' . checked( $quality, 'high', false ) . ' />';
+                            echo esc_html__( 'High', 'hdev-l10i-optimg' ) . ' (' . $mode_preset_settings['balanced']['quality_val'] . ', ' . esc_html__( 'recommended', 'hdev-l10i-optimg' ) . ')' . '</label>';
+
+                            echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-quality-very-high">';
+                            echo '<input class="hdev-customQualityInput-trigger" type="radio" id="hdev-optimg-quality-very-high" name="hdev_optimg[quality]" value="very-high" ' . checked( $quality, 'very-high', false ) . ' />';
+                            echo esc_html__( 'Very High', 'hdev-l10i-optimg' ) . ' (' . $mode_preset_settings['hd']['quality_val'] . ', best for photography portfolios)' . '</label>';
+
+                            echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-quality-medium">';
+                            echo '<input class="hdev-customQualityInput-trigger" type="radio" id="hdev-optimg-quality-medium" name="hdev_optimg[quality]" value="medium" ' . checked( $quality, 'medium', false ) . ' />';
+                            echo esc_html__( 'Medium', 'hdev-l10i-optimg' ) . ' (' . $mode_preset_settings['performance']['quality_val'] . ', for performance)' . '</label>';
+
+                            echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-quality-wp-default">';
+                            echo '<input class="hdev-customQualityInput-trigger" type="radio" id="hdev-optimg-quality-wp-default" name="hdev_optimg[quality]" value="wp-default" ' . checked( $quality, 'wp-default', false ) . ' />';
+                            echo esc_html__( 'WP Default', 'hdev-l10i-optimg' ) . ' (' . esc_html__( 'not recommended', 'hdev-l10i-optimg' ) . ')' . '</label>';
+
+                            echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-quality-custom">';
+                            echo '<input type="radio" id="hdev-optimg-quality-custom" name="hdev_optimg[quality]" value="custom" ' . checked( $quality, 'custom', false ) . ' />';
+                            echo esc_html__( 'Custom', 'hdev-l10i-optimg' ) . ' ' . esc_html__( 'compression rate', 'hdev-l10i-optimg' );
+
+                            echo '<input ' . $quality_val_hidden . ' type="number" id="hdev-optimg-quality-custom-val" name="hdev_optimg[quality_val]" value="' . $quality_val . '" step="1" min="0" max="100" class="small-text ' . $quality_val_hidden_class . '" ' . disabled( $quality,'high', false ) . disabled( $quality,'wp_default', false ) . '>' . '</label>';
+
+                        echo '</td>';
+
+                    // Close our quality radio field.
+                    echo '</tr>';
+
+                    // Our sharpening checkbox field.
+                    echo '<tr class="hdev-optimg-mode-target' . $mode_hidden_class . '" ' . $mode_hidden . '>';
+
+                        // The field label.
+                        echo '<th scope="row">';
+                            echo esc_html__( 'Enhanced quality', 'hdev-l10i-optimg' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'This ImageMagick enhancement applies state of the art blur/sharpen method to compensate for image quality loss caused by resizing. It is highly recommended for all websites &#8212; can be deactivated only by advanced users using filter hdev_optimg_sharpen', 'hdev-l10i-optimg' ) . '"><span class="icon-help"></span></div>';
+                        echo '</th>';
+
+                        // The input field.
+                        echo '<td>';
+
+                            echo '<input name="hdev_optimg[sharpen]" type="checkbox" id="hdev-optimg-sharpen" value="' . $sharpen . '" ' . checked( $sharpen_checkbox_check, '1', false ) . ' disabled />';
+                            echo '<label for="hdev-optimg-sharpen"> ' .  esc_html__( 'Improve resized images quality (highly recommended & always active)', 'hdev-l10i-optimg' ) . '</label>';
+
+                        echo '</td>';
+
+                    // Close our sharpening radio field.
+                    echo '</tr>';
+
+                    // Our interlace radio field.
+                    echo '<tr class="hdev-optimg-mode-target' . $mode_hidden_class . '" ' . $mode_hidden . '>';
+
+                        // The field label.
+                        echo '<th scope="row">';
+                            echo esc_html__( 'Interlace Scheme', 'hdev-l10i-optimg' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'Making images "progressive" reduces their size a bit and also allows some browsers to start displaying the full image faster. However some studies have shown that visually, most people prefer "deinterlaced" images because of the way they load in full resolution, unfolding from top to bottom&#8212;as opposed to progressive images which are displayed fully but in low resolution first, before they sharpen progressively as the browser finishes loading them...', 'hdev-l10i-optimg' ) . '"><span class="icon-help"></span></div>';
+                        echo '</th>';
+
+                        // The input field.
+                        echo '<td>';
+
+                            echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-interlace-origin">';
+                            echo '<input type="radio" id="hdev-optimg-interlace-origin" name="hdev_optimg[interlace]" value="origin" ' . checked( $interlace, 'origin', false ) . ' />';
+                            echo esc_html__( 'Preserve original', 'hdev-l10i-optimg' ) . '</label>';
+
+                            echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-interlace-progressive">';
+                            echo '<input type="radio" id="hdev-optimg-interlace-progressive" name="hdev_optimg[interlace]" value="progressive" ' . checked( $interlace, 'progressive', false ) . ' />';
+                            echo esc_html__( 'Progressive', 'hdev-l10i-optimg' ) . '</label>';
+
+                            echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-interlace-deinterlace">';
+                            echo '<input type="radio" id="hdev-optimg-interlace-deinterlace" name="hdev_optimg[interlace]" value="deinterlace" ' . checked( $interlace, 'deinterlace', false ) . ' />';
+                            echo esc_html__( 'Deinterlaced', 'hdev-l10i-optimg' ) . '</label>';
+
+                        echo '</td>';
+
+                    // Close our interlace radio field.
+                    echo '</tr>';
+
+                    // Our original img compression radio field.
+                    echo '<tr class="hdev-optimg-mode-target' . $mode_hidden_class . '" ' . $mode_hidden . '>';
+
+                        // The field label.
+                        echo '<th scope="row">';
+                            echo esc_html__( 'Optimize Original?', 'hdev-l10i-optimg' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'Choose if you want to also apply the above quality/compression settings to the original image.&#xa;Highly recommended &#8212; unless you\'re sure you\'ll be uploading only images that have already been fully optimized by other means...&#xa;And no worries, the non-optimized original version will be backed-up for reference and future processing.', 'hdev-l10i-optimg' ) . '"><span class="icon-help"></span></div>';
+                        echo '</th>';
+
+                        // The input field.
+                        echo '<td>';
+
+                            echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-compress-original-true">';
+                            echo '<input type="radio" id="hdev-optimg-compress-original-true" name="hdev_optimg[optimize_original]" value="true" ' . checked( $optimize_original, 'true', false ) . ' />';
+                            echo esc_html__( 'Yes (highly recommended)', 'hdev-l10i-optimg' ) . '</label>';
+
+                            echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-compress-original-false">';
+                            echo '<input type="radio" id="hdev-optimg-compress-original-false" name="hdev_optimg[optimize_original]" value="false" ' . checked( $optimize_original, 'false', false ) . ' />';
+                            echo esc_html__( 'No', 'hdev-l10i-optimg' ) . '</label>';
+
+                        echo '</td>';
+
+                    // Close our original img compression radio field.
+                    echo '</tr>';
+
+                    // Our remove meta/exif data radio field.
+                    echo '<tr class="hdev-optimg-mode-target' . $mode_hidden_class . '" ' . $mode_hidden . '>';
+
+                        // The field label.
+                        echo '<th scope="row">';
+                            echo esc_html__( 'Remove metadata?', 'hdev-l10i-optimg' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'Removing the meta/exif data reduces the images\' file size.', 'hdev-l10i-optimg' ) . '"><span class="icon-help"></span></div>';
+                        echo '</th>';
+
+                        // The input field.
+                        echo '<td>';
+
+                            echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-metadata-true">';
+                            echo '<input type="radio" id="hdev-optimg-metadata-true" name="hdev_optimg[remove_metadata]" value="true" ' . checked( $remove_metadata, 'true', false ) . ' />';
+                            echo esc_html__( 'Yes (recommended)', 'hdev-l10i-optimg' ) . '</label>';
+
+                            /*echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-metadata-resized">';
+                            echo '<input type="radio" id="hdev-optimg-metadata-resized" name="hdev_optimg[remove_metadata]" value="resized" ' . checked( $remove_metadata, 'no', false ) . ' />';
+                            echo esc_html__( 'Resized images only', 'hdev-l10i-optimg' ) . '</label>';*/
+
+                            echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-metadata-false">';
+                            echo '<input type="radio" id="hdev-optimg-metadata-false" name="hdev_optimg[remove_metadata]" value="false" ' . checked( $remove_metadata, 'false', false ) . ' />';
+                            echo esc_html__( 'No, preserve my original meta/exif data', 'hdev-l10i-optimg' ) . '</label>';
+
+                        echo '</td>';
+
+                    // Close our remove meta/exif data radio field.
+                    echo '</tr>';
+
+                    // Call our action to include any extra settings.
+                    do_action( 'hdev_optimg_settings_optimg_page', $args );
+
+                // Close the table.
+                echo '</tbody>';
+                echo '</table>';
+            }
+
+        echo '</div>';
+	}
+
+	/**
+	 * Sanitize the user data inputs.
+	 *
+	 * @param  array $input  The data entered in a settings field.
+	 *
+	 * @return array $input  The sanitized data.
+	 */
+	public function data_sanitize( $input = null ) {
+
+	    // Populated our input
+		if( empty( $input ) ) {
+            $input = $_POST['hdev_optimg'];
+        }
+
+        // Get default optimization settings
+        $optimization_default_settings = HDEV_OPTIMG_Helper::get_optimization_defaults();
+
+        // Make sure we have an array.
+        $input  = (array) $input;
+
+        // Sanitize the quality radio input.
+        $mode  = ! empty( $input['mode'] ) ? sanitize_text_field( $input['mode'] ) : $optimization_default_settings['mode'];
+
+        // Init our preset settings var
+        $mode_preset_settings = HDEV_OPTIMG_Helper::get_optimization_mode_data( $mode );
+
+		// Sanitize the quality radio input.
+		$quality  = isset( $mode_preset_settings ) ? $mode_preset_settings['quality'] : ( ! empty( $input['quality'] ) ? sanitize_text_field( $input['quality'] ) : $optimization_default_settings['quality'] );
+
+        // Sanitize the quality radio input.
+        $quality_val  = isset( $mode_preset_settings ) ? $mode_preset_settings['quality_val'] : ( ! empty( $input['quality_val'] ) ? sanitize_text_field( $input['quality_val'] ) : $optimization_default_settings['quality_val'] );
+
+        // Sanitize the sharpening checkbox input.
+        $sharpen  = isset( $mode_preset_settings ) ? $mode_preset_settings['sharpen'] : ( ! empty( $input['sharpen'] ) ? sanitize_text_field( $input['sharpen'] ) : $optimization_default_settings['sharpen'] );
+
+        // Sanitize the interlace scheme radio input.
+        $interlace  = isset( $mode_preset_settings ) ? $mode_preset_settings['interlace'] : ( ! empty( $input['interlace'] ) ? sanitize_text_field( $input['interlace'] ) : $optimization_default_settings['interlace'] );
+
+        // Sanitize the original compression radio input.
+        $optimize_original  = isset( $mode_preset_settings ) ? $mode_preset_settings['optimize_original'] : ( isset( $mode_preset_settings ) ? $mode_preset_settings['quality_val'] : ( ! empty( $input['optimize_original'] ) ? sanitize_text_field( $input['optimize_original'] ) : $optimization_default_settings['optimize_original'] ) );
+
+        // Sanitize the remove_metadata radio input.
+        $remove_metadata  = isset( $mode_preset_settings ) ? $mode_preset_settings['remove_metadata'] : ( ! empty( $input['remove_metadata'] ) ? sanitize_text_field( $input['remove_metadata'] ) : $optimization_default_settings['remove_metadata'] );
+
+		// Set our new input array.
+		$input  = array( 'mode' => $mode, 'quality' => $quality, 'quality_val' => $quality_val, 'sharpen' => $sharpen, 'interlace' => $interlace, 'optimize_original' => $optimize_original, 'remove_metadata' => $remove_metadata );
+
+		// And return our input with a filter to allow
+		// additional settings to be added later.
+		return apply_filters( 'hdev_optimg_data_sanitize', $input );
+	}
+
+	// End the class.
+}
+
+// Instantiate our class.
+$HDEV_OPTIMG_Settings = new HDEV_OPTIMG_Settings();
+$HDEV_OPTIMG_Settings->init();
