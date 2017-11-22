@@ -25,23 +25,17 @@ class HDEV_OPTIMG_Optimize
 	public function init() {
 
 		// Optimize images after they are uploaded
-		//add_filter( 'wp_generate_attachment_metadata',         array( $this, 'optimize_images'    ), 999, 2           );
 		add_filter( 'wp_update_attachment_metadata',      array( $this, 'optimize_images'             ), 999, 2  ); // TODO TEST
 
 		// Handle cleanup when attachment is deleted
 		add_action( 'delete_attachment',                  array( $this, 'cleanup_deleted_image'  ), 999, 2  );
-
-		// Handle validation & set global Imagick object and make it available for cloning within wp_generate_attachment_metadata hook
-		//add_filter( 'wp_handle_upload_prefilter',              array( $this, 'custom_upload_filter'        )                  );
-
-		// Customize compression quality (overrides WP defaults) TODO: Figure out why it messes up image edit actions by making file bigger...?
 
 		// Make sure WordPress does not re-compress files on scale/crop...etc
 		add_filter( 'wp_editor_set_quality', function( $quality ) { // VERY IMPORTANT FOR AJAX SCALE/CROP ACTIONS
 			return 100;
 		}, 999 );
 
-		// Resize image with preserved aspect ration for to optimize website bandwidth consumption
+		// Resize image with preserved aspect ration to optimize website bandwidth consumption
 		/*add_filter( 'hdev_optimize_original_img_size_params', function( $size_params ) {
 			if( intval( $size_params[0] ) <= MAX_SUPPORTED_RETINA_WIDTH && intval( $size_params[1] ) <= MAX_SUPPORTED_RETINA_WIDTH )
 			{
@@ -51,49 +45,7 @@ class HDEV_OPTIMG_Optimize
 			return array( MAX_SUPPORTED_RETINA_WIDTH, MAX_SUPPORTED_RETINA_HEIGHT ); // original will be used as x-retina size
 		});*/
 
-		/*add_filter( 'hdev_optimg_set_interlace_jpeg', function() {
-			return false;
-		});
-		add_filter( 'hdev_optimg_set_interlace_png', function() {
-			return false;
-		});
-		add_filter( 'hdev_optimg_set_interlace_gif', function() {
-			return false;
-		});*/
-
-		// Deactivate the use of Imagick in image optimization
-		/*add_filter( 'hdev_activate_imagick_image_optimization', function() {
-			return false;
-		});*/
-
 	}
-
-	/**
-	 * Cleanup residual data and files
-	 *
-	 * @param $attachment_ID
-	 */
-	public function cleanup_deleted_image( $attachment_ID ) {
-
-		// Get the backup image path if any
-		$original_copy_file = get_post_meta( $attachment_ID, '_hdev_optimg_original_bak', true );
-
-		// handle backup image cleanup
-		if( ! empty( $original_copy_file ) ) {
-
-			// Get the file directory
-			$file_dir = dirname( get_attached_file( $attachment_ID ) ) . '/';
-
-			// Get the original image path
-			$original_file_path = $file_dir . basename( $original_copy_file );
-
-			// delete backup image
-			if( file_exists( $original_file_path ) ) {
-				unlink( $original_file_path );
-			}
-		}
-	}
-
 
 	/**
 	 * Optimize images after they are resized
@@ -154,7 +106,7 @@ class HDEV_OPTIMG_Optimize
 		$is_animated = $original_imagick->getNumberImages();
 
 		// Use copy of original instead of current to make sure always original quality is maintain when new optimizations are processed on an existing image
-		if( ! empty( $original_copy_file )) {
+		if( ! empty( $original_copy_file ) ) {
 
 			// Use the original file for future images/thumbnails regeneration
 			if( ! isset( $_POST['do'] ) || $_POST['do'] == 'restore' ) { // TODO: write algo for different cases save/restore/scale
@@ -572,7 +524,7 @@ class HDEV_OPTIMG_Optimize
 			}
 
 			// Handle gif image compression
-			if( $image_data['mime_type'] = 'image/gif' ) {
+			if( $image_data['mime_type'] == 'image/gif' ) {
 
 				// Set gif image compression type
 				$imagick_object->setImageCompression( Imagick::COMPRESSION_LZW );
@@ -580,9 +532,6 @@ class HDEV_OPTIMG_Optimize
 				// Set image compression quality
 				$imagick_object->setImageCompressionQuality ( 0 );
 			}
-
-			//error_log( 'optimize_images processed: ' . serialize( COMPRESSION_JPEG ), 1, 'webmaster@healdev.com' );
-			//return true;
 
 			unlink( $image_data['file_path'] ); // delete image resized by WP
 			$imagick_object->writeImage( $image_data['file_path'] ); // write to file
@@ -611,111 +560,30 @@ class HDEV_OPTIMG_Optimize
 	}
 
 	/**
-	 * Return the correct error message depending on what type of photo is being uploaded by editors (admin can bypass some of these by uploading directly from the media library but Piklist field validation will catch up when trying to assign these images to file field types)
+	 * Cleanup residual data and files
 	 *
-	 * // Optimize images using Imagick if active
-	 *
-	 * @param $file
-	 * @return mixed
+	 * @param $attachment_ID
 	 */
-	/*public function custom_upload_filter( $file ) {
+	public function cleanup_deleted_image( $attachment_ID ) {
 
-		// Do nothing if it is not a jpg, png or gif image or if Imagick is not available
-		if( ! in_array( $file['type'], unserialize( HDEV_OPTIMG_MIMES ) ) || ! HDEV_OPTIMG_Helper::test_imagick() ) return $file;
+		// Get the backup image path if any
+		$original_copy_file = get_post_meta( $attachment_ID, '_hdev_optimg_original_bak', true );
 
-		// Set global vars to reuse in next media upload hook to save time
-		global $original_imagick;
+		// handle backup image cleanup
+		if( ! empty( $original_copy_file ) ) {
 
-		// Filter the Imagick class check
-		$imagick_optimization_active = apply_filters( 'hdev_activate_imagick_image_optimization', true );
+			// Get the file directory
+			$file_dir = dirname( get_attached_file( $attachment_ID ) ) . '/';
 
-		// Filter Optimize original image condition
-		$optimize_original = apply_filters( 'hdev_optimg_optimize_original', false );
+			// Get the original image path
+			$original_file_path = $file_dir . basename( $original_copy_file );
 
-
-		// Get new sub image as imagick object from file
-		$original_imagick = new Imagick();
-		$original_imagick->readImage( $file['tmp_name'] );
-
-		// Clone global Imagick obj//ect
-		$imagick = clone $original_imagick;
-
-		// get the processing image dimension
-		$image_dimension = array(
-			$imagick->getImageWidth(),
-			$imagick->getImageHeight()
-		);
-
-		// Get the color profile
-		$color_space = $imagick->getImageColorspace();
-
-		// RGB best web color space validation
-		if( $color_space !== 13 && $color_space !== 'COLORSPACE_RGB' ) { // TODO: handle this differently rather than error we could do notice
-
-			$file['error'] = __( 'Failed - wrong color profile. Please convert your image color space to RGB before uploading.', 'stopping-the-world-admin' );
-
-			return $file;
-		}
-
-		// Get size parameters in array and filter it
-		$size_params = array( HDEV_OPTIMG_MAX_RETINA_WIDTH, HDEV_OPTIMG_MAX_RETINA_HEIGHT );
-
-		// Set optimization check var to true
-		$optimized = true;
-
-		// Optimize original image
-		if( $optimize_original ) { // filtered condition
-
-			// Get original image aspect ratio
-			$image_ratio = $image_dimension[0] / $image_dimension[1];
-
-			// Check to make sure we are optimizing the resizing and scaling down to the correct size according to the photo ratio...etc
-			if( $image_ratio <= 1 ) {
-
-				$size_params[0] = 0;
-
-				// Make sure the image original size is preserved if smaller than max retina
-				if( $image_dimension[1] < HDEV_OPTIMG_MAX_RETINA_HEIGHT ) $size_params[1] = $image_dimension[1];
-			} else {
-
-				$size_params[1] = 0;
-
-				// Make sure the image original size is preserved if smaller than max retina
-				if( $image_dimension[0] < HDEV_OPTIMG_MAX_RETINA_WIDTH ) $size_params[0] = $image_dimension[0];
+			// delete backup image
+			if( file_exists( $original_file_path ) ) {
+				unlink( $original_file_path );
 			}
-
-			// Get resized image size
-			$sub_image_size = array(
-				'width' => $size_params[0],
-				'height' => $size_params[1]
-			);
-
-			// Optimize and resize original image and update metadata with new dimension
-			$optimized = self::wp_imagick_optimize_image( $imagick, $file['tmp_name'], $file['type'], $sub_image_size );
 		}
-
-		// Get rid of Imagick object in memory
-		if( $imagick->clear()  !== true ) {
-			$imagick->destroy();
-		}
-
-		// Unsuccessful optimization validation error message
-		if( $optimized !== true ) {
-
-			$file['error'] = 'Original: ' . $optimized;
-			return $file;
-		}
-
-		// Remove image metadata for better compression
-		add_filter( 'image_strip_meta', function() {
-			return true;
-		} );
-
-		return $file;
-	}*/
-
-
-
+	}
 	// End the class.
 }
 
