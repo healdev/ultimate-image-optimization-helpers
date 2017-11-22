@@ -11,12 +11,12 @@ if( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 // Set our defined dev mode.
 if ( ! defined( 'HDEV_OPTIMG_DEV' ) ) {
-    define( 'HDEV_OPTIMG_DEV', true );
+    define( 'HDEV_OPTIMG_DEV', false );
 }
 
 // Set our defined debug mode.
 if ( ! defined( 'HDEV_OPTIMG_DEBUG' ) ) {
-    define( 'HDEV_OPTIMG_DEBUG', true );
+    define( 'HDEV_OPTIMG_DEBUG', false );
 }
 
 // Set our defined plugin name.
