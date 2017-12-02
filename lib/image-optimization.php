@@ -491,7 +491,7 @@ class HDEV_OPTIMG_Optimize
 				// Set png image depth to 8-bits
 				$imagick_object->setOption( 'png:format', 'png8' );
 			}
-			var_dump($resize_image);
+
 			// Sharpen image slightly after resizing and compressing to recover quality (only if it was resized)
 			if( $resize_image && $optimization_params['sharpen'] ) {
 
