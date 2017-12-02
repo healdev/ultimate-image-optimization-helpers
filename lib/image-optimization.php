@@ -523,7 +523,7 @@ class HDEV_OPTIMG_Optimize
 			}
 
 			// Handle jpeg image compression
-			if( $image_data['mime_type'] == 'image/jpg' ) {
+			if( $image_data['mime_type'] == 'image/jpeg' ) {
 
 				// Set jpeg image compression type
 				if( ! empty( $optimization_params['lossless'] ) && $optimization_params['lossless'] ) {
