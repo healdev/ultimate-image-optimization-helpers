@@ -1,6 +1,6 @@
 <?php
 /**
- * Ultimate Image Optimization Helpers Plugin - admin functions
+ * Ultimate Image Optimization Helpers Plugin - admin functions.
  *
  * Contains more generic admin related functions.
  *
