@@ -25,10 +25,10 @@ class HDEV_OPTIMG_Optimize
 	public function init() {
 
 		// Optimize images after they are uploaded
-		add_filter( 'wp_update_attachment_metadata',      array( $this, 'optimize_images'             ), 999, 2  ); // TODO TEST
+		add_filter( 'wp_update_attachment_metadata',      array( $this, 'optimize_images'             ), 9999, 2  ); // TODO TEST
 
 		// Handle cleanup when attachment is deleted
-		add_action( 'delete_attachment',                  array( $this, 'cleanup_deleted_image'  ), 999, 2  );
+		add_action( 'delete_attachment',                  array( $this, 'cleanup_deleted_image'  ), 9999, 2  );
 
 		// Make sure WordPress does not re-compress files on scale/crop...etc
 		add_filter( 'wp_editor_set_quality', function( $quality ) { // VERY IMPORTANT FOR AJAX SCALE/CROP ACTIONS
@@ -70,10 +70,18 @@ class HDEV_OPTIMG_Optimize
 			$optimization_settings = $optimization_default_settings;
 		}
 
-		// Filter the Imagick class check
-		$imagick_optimization_active = apply_filters( 'hdev_activate_imagick_image_optimization', true ); // TODO: Add as option
+		// Fetch and filter our mode setting.
+		$mode  = apply_filters( 'hdev_optimg_set_mode',
+			HDEV_OPTIMG_Helper::get_single_option(
+				$optimization_settings,
+				$optimization_default_settings['mode'],
+				'mode' )
+		);
 
-		// Do nothing if it is not a jpg, png or gif image or if Imagick is not available or if optimization is deactivated
+		// Check and filter if optimization is active
+		$imagick_optimization_active = apply_filters( 'hdev_activate_imagick_image_optimization', $mode !== 'disabled' );
+
+		// Do nothing if the image type is not among the allowed mime types constant or if Imagick is not available or if optimization is deactivated
 		if ( ! $imagick_optimization_active || ! in_array( $attachment_mime_type, unserialize( HDEV_OPTIMG_MIMES ) ) || ! HDEV_OPTIMG_Helper::test_imagick() ) return $metadata;
 
 		// Get the file directory
@@ -93,26 +101,23 @@ class HDEV_OPTIMG_Optimize
 
 			$metadata = $metadata_backup;
 		}
-		if( isset( $_POST['do'] ) ) {
-
-			update_post_meta( $attachment_ID, 'hdev_crop_test', $_POST['do'] );
-		}
 
 		// Get new sub image as imagick object from file
 		$original_imagick = new Imagick();
 		$original_imagick->readImage( $original_file_path );
 
 		// Check if image is animated or still
-		$is_animated = $original_imagick->getNumberImages();
+		$is_animated = $original_imagick->getNumberImages() > 1 ? true : false;
 
-		// Use copy of original instead of current to make sure always original quality is maintain when new optimizations are processed on an existing image
+		/** Use copy of original instead of current when possible to make sure original quality is always maintained when new optimizations are processed on an existing image */
+
 		if( ! empty( $original_copy_file ) ) {
 
 			// Use the original file for future images/thumbnails regeneration
-			if( ! isset( $_POST['do'] ) || $_POST['do'] == 'restore' ) { // TODO: write algo for different cases save/restore/scale
+			if( ! isset( $_POST['do'] ) || $_POST['do'] == 'restore' ) { // TODO: maybe write algorithm for different cases save/scale
 				$original_file_path = $file_dir . basename( $original_copy_file );
 			}
-		} elseif( $is_animated == 1 ) { // handle original backup only if the image is not animated
+		} elseif( ! $is_animated ) { // Create a backup of the original image only if it is not animated
 
 			$file_path_parts = pathinfo( $metadata['file'] );
 			$new_original_file_name = $file_path_parts['filename'] . '__ORIGINAL.' . $file_path_parts['extension'];
@@ -137,18 +142,11 @@ class HDEV_OPTIMG_Optimize
 		// Init optimization log
 		$_hdev_optimg_log = array();
 
-		// Fetch and filter our mode setting.
-		$mode  = apply_filters( 'hdev_optimg_set_mode',
-			HDEV_OPTIMG_Helper::get_single_option(
-				$optimization_settings,
-				$optimization_default_settings['mode'],
-				'mode' )
-		);
-
 		// Init our preset settings var
 		$preset_settings = HDEV_OPTIMG_Helper::get_optimization_mode_data( $mode );
 
-		// Fetch and filter our other settings.
+		/** Fetch and filter our other settings. */
+
 		$quality  = isset( $preset_settings )
 			? $preset_settings['quality']
 			: HDEV_OPTIMG_Helper::get_single_option(
@@ -156,11 +154,11 @@ class HDEV_OPTIMG_Optimize
 				$optimization_default_settings['quality'],
 				'quality'
 			);
-		$quality  = HDEV_OPTIMG_Helper::get_optimization_quality( $quality ); // filtered by plugin and WP (see function HDEV_OPTIMG_Helper::get_optimization_quality)
+		$quality  = HDEV_OPTIMG_Helper::get_optimization_quality( $quality ); // filtered by this plugin and WordPress
 
 		$sharpen = apply_filters( 'hdev_optimg_sharpen', true );
 
-		// Always set color profile to sRGB (do we need to allow filtering this? probably not...)
+		// Always set color profile to sRGB (do we need to allow filtering of this? probably not...)
 		$sRGB = true;
 
 		$interlace  = apply_filters( 'hdev_optimg_set_interlace',
@@ -172,7 +170,7 @@ class HDEV_OPTIMG_Optimize
 				'interlace'
 			)
 		);
-		$interlace = $interlace == 'progressive' ? true : ( $interlace == 'deinterlace' ? false : 0 );
+		$interlace = $interlace == 'progressive' ? true : ( $interlace == 'deinterlace' ? false : null );
 
 		$optimize_original  = apply_filters( 'hdev_optimg_optimize_original',
 			isset( $preset_settings )
@@ -184,7 +182,7 @@ class HDEV_OPTIMG_Optimize
 			)
 		);
 		$optimize_original = $optimize_original == 'true' ? true : false;
-		$optimize_original = $is_animated > 1 ? false : $optimize_original; // do not optimize original if it is an animated image
+		$optimize_original = $is_animated ? false : $optimize_original; // do not optimize original if it is an animated image
 
 		$remove_metadata  = apply_filters( 'hdev_optimg_remove_metadata',
 			isset( $preset_settings )
@@ -196,10 +194,11 @@ class HDEV_OPTIMG_Optimize
 			)
 		);
 		$remove_metadata = $remove_metadata == 'true' ? true : false;
+
 		// Update image metadata saved as postmeta but keep orientation info
 		if( $remove_metadata ) {
 
-			foreach( HDEV_OPTIMG_Helper::get_removable_meta() as $meta) {
+			foreach( HDEV_OPTIMG_Helper::get_removable_meta() as $meta ) {
 				$metadata['image_meta'][$meta] = '';
 			}
 		}
@@ -214,7 +213,8 @@ class HDEV_OPTIMG_Optimize
 		);
 
 		/** Start original image optimization process if option is turned on *************/
-		if( $optimize_original ) { // TODO: Store original photo somewhere and use it in future operations (especially restore image after crop/orientation change)
+
+		if( $optimize_original ) {
 
 			// Clone original Imagick object from original (more efficient than creating new object every time)
 			$imagick = clone $original_imagick;
@@ -301,13 +301,14 @@ class HDEV_OPTIMG_Optimize
 				$_hdev_optimg_rate++;
 			}
 		}
+
 		/*********************** End original image optimization process */
 
 		// Get the size metadata
 		$image_sizes = $metadata['sizes'];
 
 		// Get theme image sizes info
-		$theme_image_sizes = HDEV_OPTIMG_Helper::get_image_sizes();
+		$image_sizes_data = HDEV_OPTIMG_Helper::get_image_sizes();
 
 		// Use original backed up image if doing scaling ajax action
 		if( ! empty( $original_copy_file ) && isset( $_POST['do'] ) && $_POST['do'] == 'scale' ) {
@@ -321,13 +322,14 @@ class HDEV_OPTIMG_Optimize
 		}
 
 		/** Start intermediate images optimization process **************************/
-		if( $is_animated < 2 ) { // optimize only if image is not animated
+
+		if( ! $is_animated ) { // optimize only if image is not animated
 			foreach( $image_sizes as $theme_image_size => $theme_image_size_data ) {
 
 				// If sub image does not exist, log error and do nothing
-				if( empty( $theme_image_size_data ) ) {
+				if( empty( $theme_image_size_data ) ) { // TODO: do we need to optimize this? because it can be not empty but corrupted
 
-					error_log( 'Notice: (Plugin ' . HDEV_OPTIMG_PLUGIN_NAME . ') Unable to optimize the"' . $theme_image_size . '"" image because the metadata is corrupted.', 0 ); // TODO: make sure we optimize this because it can be not empty but still corrupted
+					error_log( 'Notice: (Plugin ' . HDEV_OPTIMG_PLUGIN_NAME . ') Unable to optimize the"' . $theme_image_size . '"" image because the metadata is corrupted.', 0 );
 
 					continue;
 				}
@@ -337,14 +339,19 @@ class HDEV_OPTIMG_Optimize
 				$sub_image_path = dirname( get_attached_file( $attachment_ID, true ) ) . '/' . $sub_image_name;
 
 				// Clone original Imagick object from original (more efficient than creating new object every time)
-				$imagick = clone $original_imagick;
+				if( $attachment_mime_type == 'image/jpeg' ) {
+					$imagick = clone $original_imagick;
+				} else {
+					$imagick = new Imagick();
+					$imagick->readImage( $file_dir . $metadata['sizes'][$theme_image_size]['file'] );
+				}
 
 				$sub_image_data = array(
 					'file_path' => $sub_image_path,
 					'mime_type' => $attachment_mime_type,
 					'width' => intval( $metadata['sizes'][$theme_image_size]['width'] ),
-					'height' => $theme_image_sizes[$theme_image_size]['crop'] ? intval( $metadata['sizes'][$theme_image_size]['height'] ) : 0,
-					'crop' => $theme_image_sizes[$theme_image_size]['crop'],
+					'height' => $image_sizes_data[$theme_image_size]['crop'] ? intval( $metadata['sizes'][$theme_image_size]['height'] ) : 0,
+					'crop' => $image_sizes_data[$theme_image_size]['crop'],
 					'orientation' => $metadata['image_meta']['orientation']
 				);
 
@@ -419,7 +426,7 @@ class HDEV_OPTIMG_Optimize
 	}
 
 	/**
-	 * Optimize JPEG, GIF, PNG & PDF - Scale (resize), sharpen, interlace (make progressive) and compress
+	 * Optimize allowed mime types - Scale (resize), sharpen, interlace (make progressive) and compress
 	 *
 	 * @param $imagick_object
 	 * @param $image_data
@@ -428,15 +435,16 @@ class HDEV_OPTIMG_Optimize
 	 */
 	public function wp_imagick_optimize_image( &$imagick_object, $image_data, $optimization_params ) {
 
-		// Do nothing if it is not a jpg, png or gif image or if Imagick is not available
+		// Do nothing if the image type is not among the allowed mime types constant or if Imagick is not available
 		if( ! in_array( $image_data['mime_type'], unserialize( HDEV_OPTIMG_MIMES ) ) || ! HDEV_OPTIMG_Helper::test_imagick() ) {
 			return array(
 				'optimized' => false,
 				'error_message' => 'This media file was not optimized because ' . $image_data['mime_type'] . ' optimization is not enabled.'
 			);
-		} // TODO: return false???
+		} // TODO: return just false???
 
 		try {
+
 			// Remove all metadata info and profiles
 			if( $optimization_params['remove_metadata'] ) {
 
@@ -444,7 +452,7 @@ class HDEV_OPTIMG_Optimize
 
 				// Keep/restore image orientation exif data if available and has been collected by WP prior to optimization
 				if( ! empty( $image_data ) ) {
-					$imagick_object->setImageProperty('exif:Orientation', $image_data['orientation']);
+					$imagick_object->setImageProperty( 'exif:Orientation', $image_data['orientation'] );
 				}
 			}
 
@@ -454,20 +462,21 @@ class HDEV_OPTIMG_Optimize
 			}
 
 			// Interlace image (make it "progressive")
-			if( $optimization_params['interlace'] ) {
-				$imagick_object->setInterlaceScheme( Imagick::INTERLACE_JPEG );
+			if( ! empty( $optimization_params['interlace'] ) && $interlace_scheme = self::get_imagick_interlace_scheme( $image_data['mime_type'], $optimization_params['interlace'] ) ) {
+
+				$imagick_object->setInterlaceScheme( $interlace_scheme );
 			}
 
-			// Resize image
-			$resize_image = ! empty( $image_data['width'] ) || ! empty( $image_data['height'] );
-			if( $resize_image && $image_data['crop'] ) {
+			// Resize image when necessary and only if mime type is jpeg
+			$resize_image = ( ! empty( $image_data['width'] ) || ! empty( $image_data['height'] ) );
+			if( $resize_image && $image_data['crop'] && $image_data['mime_type'] == 'image/jpeg' ) {
 
 				// Resize/crop new image
 				$imagick_object->cropThumbnailImage(
 					(int) $image_data['width'],
 					(int) $image_data['height']
 				);
-			} elseif( $resize_image ) {
+			} elseif( $resize_image && $image_data['mime_type'] == 'image/jpeg' ) {
 
 				// resize/scale
 				$imagick_object->scaleImage(
@@ -476,6 +485,13 @@ class HDEV_OPTIMG_Optimize
 				);
 			}
 
+			// Handle png image depth
+			if( $image_data['mime_type'] == 'image/png'  ) {
+
+				// Set png image depth to 8-bits
+				$imagick_object->setOption( 'png:format', 'png8' );
+			}
+			var_dump($resize_image);
 			// Sharpen image slightly after resizing and compressing to recover quality (only if it was resized)
 			if( $resize_image && $optimization_params['sharpen'] ) {
 
@@ -507,7 +523,7 @@ class HDEV_OPTIMG_Optimize
 			}
 
 			// Handle jpeg image compression
-			if( in_array( $image_data['mime_type'], array( 'image/jpeg', 'image/jpg') ) ) {
+			if( $image_data['mime_type'] == 'image/jpg' ) {
 
 				// Set jpeg image compression type
 				if( ! empty( $optimization_params['lossless'] ) && $optimization_params['lossless'] ) {
@@ -523,11 +539,24 @@ class HDEV_OPTIMG_Optimize
 				$imagick_object->setImageCompressionQuality ( $optimization_params['quality'] ); // Originally set to 82 but 77 seems a good compromise and 65 will suite most people - 74 will match about the WP default rendered file size if sharpening is turned on
 			}
 
-			// Handle gif image compression
+			// Handle png image compression
+			if( $image_data['mime_type'] == 'image/png'  ) {
+
+				// Set gif image compression type
+				$imagick_object->setImageCompression( Imagick::COMPRESSION_UNDEFINED );
+
+				// Set image compression quality
+				$imagick_object->setImageCompressionQuality ( 0 );
+
+				$imagick_object->setOption( 'png:compression-level', 9 );
+				$imagick_object->setOption( 'png:compression-strategy', 3 );
+			}
+
+			// Handle png & gif image compression
 			if( $image_data['mime_type'] == 'image/gif' ) {
 
 				// Set gif image compression type
-				$imagick_object->setImageCompression( Imagick::COMPRESSION_LZW );
+				$imagick_object->setImageCompression( Imagick::COMPRESSION_UNDEFINED );
 
 				// Set image compression quality
 				$imagick_object->setImageCompressionQuality ( 0 );
@@ -584,6 +613,35 @@ class HDEV_OPTIMG_Optimize
 			}
 		}
 	}
+
+	/**
+	 * Gets the correct Imagick interlace constant
+	 *
+	 * @param $mime_type
+	 * @param bool $interlace
+	 *
+	 * @return bool|int
+	 */
+	public function get_imagick_interlace_scheme( $mime_type, $interlace = true ) {
+
+		// Deactivate interlacing if that's what the user wishes
+		if( ! $interlace ) return Imagick::INTERLACE_NO;
+
+		// Return the interlace scheme depending on mime type
+		switch( $mime_type ) :
+
+			case 'image/jpeg' :
+				return Imagick::INTERLACE_JPEG;
+			case 'image/png' :
+				return Imagick::INTERLACE_PNG;
+			case 'image/gif' :
+				return Imagick::INTERLACE_GIF; // TODO: Make sure INTERLACE_GIF exists... Imagick 6.3.4 or higher
+			default:
+				return false;
+
+		endswitch;
+	}
+
 	// End the class.
 }
 

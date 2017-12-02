@@ -11,7 +11,7 @@ if( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 // Set our defined dev mode.
 if ( ! defined( 'HDEV_OPTIMG_DEV' ) ) {
-    define( 'HDEV_OPTIMG_DEV', false );
+    define( 'HDEV_OPTIMG_DEV', true );
 }
 
 // Set our defined debug mode.
@@ -28,11 +28,7 @@ if ( ! defined( 'HDEV_OPTIMG_PLUGIN_NAME' ) ) {
 if ( ! defined( 'HDEV_OPTIMG_MIMES' ) ) {
     define( 'HDEV_OPTIMG_MIMES', serialize(
         array(
-            'image/jpeg',
-            'image/jpg',
-	        'image/gif',
-            'image/png',
-            'image/pdf'
+            'image/jpeg'
         )
     ) );
 }

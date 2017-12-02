@@ -49,8 +49,8 @@ class HDEV_OPTIMG_Settings
      */
     public function settings_plugin_theme_image_sizes( $args ) {
 
-        // Get all image sizes
-        $image_sizes = HDEV_OPTIMG_Helper::get_image_sizes( true );
+        // Get all extra image sizes
+        $image_sizes = HDEV_OPTIMG_Helper::get_image_sizes( 'additional' );
 
         // Add a div to wrap our whole thing for clean.
         echo '<div class="' . esc_attr( $args['id'] ) . '-wrap">';
@@ -177,7 +177,7 @@ class HDEV_OPTIMG_Settings
             } else {
 
                 // Add our intro content.
-                echo '<p>' . esc_html__( 'Easily optimize JPEG, PNG and GIF images for better quality and faster page load.' , 'hdev-l10i-optimg' ) . '</p>';
+                echo '<p>' . esc_html__( 'Easily optimize JPEG images for better quality and faster page load.' , 'hdev-l10i-optimg' ) . '</p>';
 
                 echo '<p><strong><u>' . esc_html__( 'Important Note' , 'hdev-l10i-optimg' ) . '</u></strong>: ' . esc_html__( 'New optimization settings will only affect future uploaded images.' , 'hdev-l10i-optimg' ) . '<br>' . esc_html__( 'To apply new optimizations to previously uploaded images, we recommend regenerating them using this plugin: ' , 'hdev-l10i-optimg' ) . ' <a href="https://wordpress.org/plugins/regenerate-thumbnails/" target="_blank">' . esc_html__('Regenerate Thumbnails', 'hdev-l10i-optimg' ) . '</a> ' . esc_html__('by Alex Mills', 'hdev-l10i-optimg' ) . '</p>';
 
@@ -229,8 +229,13 @@ class HDEV_OPTIMG_Settings
                             echo '<input type="radio" id="hdev-optimg-mode-performance" name="hdev_optimg[mode]" value="performance" ' . checked( $mode, 'performance', false ) . ' />';
                             echo esc_html__( 'Performance (higher compression | lower image quality)', 'hdev-l10i-optimg' ) . '</label>';
 
+	                        echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-mode-advanced">';
                             echo '<input type="radio" id="hdev-optimg-mode-advanced" name="hdev_optimg[mode]" value="advanced" ' . checked( $mode, 'advanced', false ) . ' />';
                             echo esc_html__( 'Custom', 'hdev-l10i-optimg' ) . ' (' .esc_html__( 'for advanced users', 'hdev-l10i-optimg' ) . ')' . '</label>';
+
+				            echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-mode-disabled">';
+				            echo '<input type="radio" id="hdev-optimg-mode-disabled" name="hdev_optimg[mode]" value="disabled" ' . checked( $mode, 'disabled', false ) . ' />';
+				            echo esc_html__( 'Disabled (no optimization)', 'hdev-l10i-optimg' ) . '</label>';
 
                         echo '</td>';
 

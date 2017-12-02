@@ -1,10 +1,5 @@
 /* Admin Style Sheet */
 
-
-#hdev-optimg-mode-container label:last-child {
-	margin-left: 10px;
-}
-
 .hdev-tooltip {
 	position: relative;
 	cursor: default;
@@ -71,6 +66,9 @@
 .hdev-label-radio-stacked {
 	display: block;
 	margin-bottom: 5px;
+}
+.hdev-label-radio-stacked[for="hdev-optimg-mode-disabled"] {
+	color: #a00;
 }
 .hdev-admin-box {
 	border: 1px solid #fff;

@@ -177,7 +177,7 @@ class HDEV_OPTIMG_Custom_Columns
         // Get the file mime type
         $file_mime_type = get_post_mime_type( $post_id );
 
-        // Do nothing if file is not a JPEG, PNG or GIF
+        // Do nothing if file is not a JPEG
         if( ! in_array( $file_mime_type, unserialize( HDEV_OPTIMG_MIMES ) ) ) return;
 
         // Get file metadata
@@ -201,6 +201,12 @@ class HDEV_OPTIMG_Custom_Columns
         // Init previous info var to ensure we can handle order the way we want
         $previous_file_info =  '';
 
+	    // Init theme/plugins file info var
+	    $other_file_info =  '&#xa;~~~~';
+
+	    // Get all image size registered names
+	    $default_image_sizes = HDEV_OPTIMG_Helper::get_image_sizes( 'default', true );
+
         // Get WP time zone setting and et default time zone to current user setting or fall back and use default
         // For debug use only
         $wp_time_zone = get_option('timezone_string');
@@ -212,17 +218,26 @@ class HDEV_OPTIMG_Custom_Columns
             // Get the intermediate image path
             $file_path = $file_dir . basename( $image_size_data['file'] );
 
-            // Add previous info to output to be able to add thumbnail info last for perfect descending order
-            $file_info_output = $previous_file_info . $file_info_output;
+	        // Get current image optimization status
+	        $optimization_status = ! empty( $_hdev_optimg_status ) && ! empty( $_hdev_optimg_log ) && array_key_exists( $image_size, $_hdev_optimg_log[0] ) ? '&#8212;Optimized' : '';
 
-            // Get current image optimization status
-            $optimization_status = ! empty( $_hdev_optimg_status ) && ! empty( $_hdev_optimg_log ) && array_key_exists( $image_size, $_hdev_optimg_log[0] ) ? '&#8212;Optimized' : '';
+            // Build output parts
+	        if( ! in_array( $image_size, $default_image_sizes ) ) {
 
-            $previous_file_info = '&#xa;' . $image_size . '&#8212;(' . $image_size_data['width'] . 'x' . $image_size_data['height'] . ')&#8212;' . ( ! file_exists( $file_path ) ? 'NONEXISTENT FILE!' : round( filesize( $file_path )/1000, 1 ) ) . ' KB' . $optimization_status . ( HDEV_OPTIMG_DEBUG && file_exists( $file_path ) ? ' | ' . date("y-m-d H:i:s", filemtime( $file_path ) ) : '' );
+		        // Build additional images output
+		        $other_file_info .= '&#xa;&#8226;&nbsp;' . $image_size . '&#8212;(' . $image_size_data['width'] . 'x' . $image_size_data['height'] . ')&#8212;' . ( ! file_exists( $file_path ) ? 'NONEXISTENT FILE!' : round( filesize( $file_path )/1000, 1 ) ) . '&nbsp;KB' . $optimization_status . ( HDEV_OPTIMG_DEBUG && file_exists( $file_path ) ? ' | ' . date("y-m-d H:i:s", filemtime( $file_path ) ) : '' );
+	        } else {
+
+		        // Add previous info to output to be able to add thumbnail info last for perfect descending order
+		        $file_info_output = $previous_file_info . $file_info_output;
+
+		        // Save file info as previous info for sorting
+		        $previous_file_info = '&#xa;&#8226;&nbsp;' . $image_size . '&#8212;(' . $image_size_data['width'] . 'x' . $image_size_data['height'] . ')&#8212;' . ( ! file_exists( $file_path ) ? 'NONEXISTENT FILE!' : round( filesize( $file_path )/1000, 1 ) ) . '&nbsp;KB' . $optimization_status . ( HDEV_OPTIMG_DEBUG && file_exists( $file_path ) ? ' | ' . date("y-m-d H:i:s", filemtime( $file_path ) ) : '' );
+	        }
         }
 
-        // Init output with data from original file
-        $file_info_output = 'Full' . '&#8212;(' . $metadata['width'] . 'x' . $metadata['height'] . ')&#8212;' . ( ! file_exists( $original_file_path ) ? 'NONEXISTENT FILE!' : round( filesize( $original_file_path )/1000, 1 ) ) . ' KB&#8212;' . ucwords( $original_optimization_status ) . ( HDEV_OPTIMG_DEBUG && file_exists( $original_file_path ) ? ' | ' . date("y-m-d H:i:s", filemtime( $original_file_path ) ) : '' ) . $file_info_output . $previous_file_info;
+        // Build final output adding data from original file first
+        $file_info_output = '&#8226;&nbsp;Full' . '&#8212;(' . $metadata['width'] . 'x' . $metadata['height'] . ')&#8212;' . ( ! file_exists( $original_file_path ) ? 'NONEXISTENT FILE!' : round( filesize( $original_file_path )/1000, 1 ) ) . '&nbsp;KB&#8212;' . ucwords( $original_optimization_status ) . ( HDEV_OPTIMG_DEBUG && file_exists( $original_file_path ) ? ' | ' . date("y-m-d H:i:s", filemtime( $original_file_path ) ) : '' ) . $previous_file_info . $file_info_output . $other_file_info;
 
         // Put together the optimization details
         if( ! empty( $_hdev_optimg_log ) ) {
@@ -234,7 +249,7 @@ class HDEV_OPTIMG_Custom_Columns
             $optimization_details .= '&#xa;&nbsp;- Enhanced Quality: ' . ( array_key_exists( 'blur_sharpen', $_hdev_optimg_log[0] ) && $_hdev_optimg_log[0]['blur_sharpen'] ? 'yes' : 'no' );
             $optimization_details .= '&#xa;&nbsp;- Metadata/EXIF: ' . (  array_key_exists( 'remove_metadata', $_hdev_optimg_log[0] ) && $_hdev_optimg_log[0]['remove_metadata'] ? 'removed' : 'preserved original' );
             $optimization_details .= '&#xa;&nbsp;- Color Profile: ' . ( array_key_exists( 'color_profile', $_hdev_optimg_log[0] ) && $_hdev_optimg_log[0]['color_profile'] ? 'sRGB' : 'unknown' );
-	        $optimization_details .= '&#xa;&nbsp;- Orientation: ' . ( array_key_exists( 'orientation', $_hdev_optimg_log[0] ) && ! empty( $_hdev_optimg_log[0]['orientation'] ) ? $_hdev_optimg_log[0]['orientation'] : 'unknown' );
+	        $optimization_details .= '&#xa;&nbsp;- Orientation: ' . ( array_key_exists( 'orientation', $_hdev_optimg_log[0] ) && ! empty( $_hdev_optimg_log[0]['orientation'] ) ? $_hdev_optimg_log[0]['orientation'] : 'default' );
         } else {
             $optimization_details = '';
         }
