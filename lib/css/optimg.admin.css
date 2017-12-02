@@ -6,14 +6,11 @@
 	display: inline-block;
 	margin: 0 0 0 10px;
 	text-align: left;
-	color: #000000;
+	color: #000;
 }
 .hdev-tooltip.hdev-tooltip-no-margin {
 	margin: 0;
 }
-/*.hdev-tooltip.dashicons {
-	vertical-align: text-top;
-}*/
 .hdev-tooltip:before {
 	color: #acacac;
 	cursor: pointer;
