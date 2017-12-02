@@ -25,15 +25,10 @@ class HDEV_OPTIMG_Optimize
 	public function init() {
 
 		// Optimize images after they are uploaded
-		add_filter( 'wp_update_attachment_metadata',      array( $this, 'optimize_images'             ), 9999, 2  ); // TODO TEST
+		add_filter( 'wp_update_attachment_metadata',      array( $this, 'optimize_images'             ), 9999, 2  );
 
 		// Handle cleanup when attachment is deleted
 		add_action( 'delete_attachment',                  array( $this, 'cleanup_deleted_image'  ), 9999, 2  );
-
-		// Make sure WordPress does not re-compress files on scale/crop...etc
-		add_filter( 'wp_editor_set_quality', function( $quality ) { // VERY IMPORTANT FOR AJAX SCALE/CROP ACTIONS
-			return 100;
-		}, 999 );
 
 		// Resize image with preserved aspect ration to optimize website bandwidth consumption
 		/*add_filter( 'hdev_optimize_original_img_size_params', function( $size_params ) {
@@ -80,6 +75,13 @@ class HDEV_OPTIMG_Optimize
 
 		// Check and filter if optimization is active
 		$imagick_optimization_active = apply_filters( 'hdev_activate_imagick_image_optimization', $mode !== 'disabled' );
+
+		// Make sure WordPress does not compress files on scale/crop...etc so our compression does not add up quality loss
+		if( $imagick_optimization_active ) {
+			add_filter( 'wp_editor_set_quality', function( $quality ) { // VERY IMPORTANT FOR AJAX SCALE/CROP ACTIONS
+				return 100;
+			}, 9999 );
+		}
 
 		// Do nothing if the image type is not among the allowed mime types constant or if Imagick is not available or if optimization is deactivated
 		if ( ! $imagick_optimization_active || ! in_array( $attachment_mime_type, unserialize( HDEV_OPTIMG_MIMES ) ) || ! HDEV_OPTIMG_Helper::test_imagick() ) return $metadata;
