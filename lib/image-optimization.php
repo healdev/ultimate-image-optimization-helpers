@@ -17,6 +17,8 @@ if( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 class HDEV_OPTIMG_Optimize
 {
 
+	private $optimization_settings, $optimization_default_settings, $mode, $imagick_optimization_active, $imagick_active;
+
 	/**
 	 * Load our hooks and filters.
 	 *
@@ -24,22 +26,37 @@ class HDEV_OPTIMG_Optimize
 	 */
 	public function init() {
 
+		// Fetch the optimization setting options
+		$this->optimization_settings = get_option( 'hdev_optimg' );
+
+		// Get default optimization settings
+		$this->optimization_default_settings = HDEV_OPTIMG_Helper::get_optimization_defaults();
+
+		// Fetch and filter our mode setting.
+		$this->mode  = apply_filters( 'hdev_optimg_set_mode',
+			HDEV_OPTIMG_Helper::get_single_option(
+				$this->optimization_settings,
+				$this->optimization_default_settings['mode'],
+				'mode' )
+		);
+
+		// Check and filter if optimization is active
+		$this->imagick_optimization_active = apply_filters( 'hdev_activate_imagick_image_optimization', $this->mode !== 'disabled' );
+
+		$this->imagick_active = HDEV_OPTIMG_Helper::test_imagick();
+
 		// Optimize images after they are uploaded
-		add_filter( 'wp_update_attachment_metadata',      array( $this, 'optimize_images'             ), 9999, 2  );
+		add_filter( 'wp_update_attachment_metadata',      array( $this, 'optimize_images'        ), 9999, 2  );
+
+		// Make sure WordPress does not compress files on scale/crop...etc so our compression does not add up quality loss
+		if( $this->imagick_optimization_active ) {
+			add_filter( 'wp_editor_set_quality', function( $quality ) { // VERY IMPORTANT FOR AJAX SCALE/CROP ACTIONS
+				return 100;
+			}, 9999 );
+		}
 
 		// Handle cleanup when attachment is deleted
 		add_action( 'delete_attachment',                  array( $this, 'cleanup_deleted_image'  ), 9999, 2  );
-
-		// Resize image with preserved aspect ration to optimize website bandwidth consumption
-		/*add_filter( 'hdev_optimize_original_img_size_params', function( $size_params ) {
-			if( intval( $size_params[0] ) <= MAX_SUPPORTED_RETINA_WIDTH && intval( $size_params[1] ) <= MAX_SUPPORTED_RETINA_WIDTH )
-			{
-				return $size_params;
-			}
-
-			return array( MAX_SUPPORTED_RETINA_WIDTH, MAX_SUPPORTED_RETINA_HEIGHT ); // original will be used as x-retina size
-		});*/
-
 	}
 
 	/**
@@ -54,43 +71,35 @@ class HDEV_OPTIMG_Optimize
 		// Get the file mime type
 		$attachment_mime_type = get_post_mime_type( $attachment_ID );
 
-		// Fetch the optimization setting options
-		$optimization_settings = get_option( 'hdev_optimg' );
-
-		// Get default optimization settings
-		$optimization_default_settings = HDEV_OPTIMG_Helper::get_optimization_defaults();
-
 		// Make sure we use the default settings if user has not set any yet
-		if( empty( $optimization_settings ) ) {
-			$optimization_settings = $optimization_default_settings;
-		}
-
-		// Fetch and filter our mode setting.
-		$mode  = apply_filters( 'hdev_optimg_set_mode',
-			HDEV_OPTIMG_Helper::get_single_option(
-				$optimization_settings,
-				$optimization_default_settings['mode'],
-				'mode' )
-		);
-
-		// Check and filter if optimization is active
-		$imagick_optimization_active = apply_filters( 'hdev_activate_imagick_image_optimization', $mode !== 'disabled' );
-
-		// Make sure WordPress does not compress files on scale/crop...etc so our compression does not add up quality loss
-		if( $imagick_optimization_active ) {
-			add_filter( 'wp_editor_set_quality', function( $quality ) { // VERY IMPORTANT FOR AJAX SCALE/CROP ACTIONS
-				return 100;
-			}, 9999 );
+		if( empty( $this->optimization_settings ) ) {
+			$this->optimization_settings = $this->optimization_default_settings;
 		}
 
 		// Do nothing if the image type is not among the allowed mime types constant or if Imagick is not available or if optimization is deactivated
-		if ( ! $imagick_optimization_active || ! in_array( $attachment_mime_type, unserialize( HDEV_OPTIMG_MIMES ) ) || ! HDEV_OPTIMG_Helper::test_imagick() ) return $metadata;
+		if ( ! $this->imagick_optimization_active || ! in_array( $attachment_mime_type, unserialize( HDEV_OPTIMG_MIMES ) ) || ! $this->imagick_active ) return $metadata;
 
 		// Get the file directory
 		$file_dir = dirname( get_attached_file( $attachment_ID ) ) . '/';
 
 		// Get the original image path
 		$original_file_path = $file_dir . basename( $metadata['file'] );
+
+		// Get new sub image as imagick object from file
+		$original_imagick = new Imagick();
+		$original_imagick->readImage( $original_file_path );
+
+		// Detect if image has transparency so png to jpeg is applied only when no transparency is detected
+		$has_transparency = self::has_transparency( $original_imagick, $attachment_mime_type );
+
+		// Do nothing if image is png with transparency
+		if( $attachment_mime_type == 'image/png' && $has_transparency ) {
+
+			// Get rid of Imagick object in memory
+			if( $original_imagick->clear() !== true ) $original_imagick->destroy();
+
+			return $metadata;
+		}
 
 		// Set path info for copy of original image if set previously
 		$original_copy_file = get_post_meta( $attachment_ID, '_hdev_optimg_original_bak', true );
@@ -104,11 +113,30 @@ class HDEV_OPTIMG_Optimize
 			$metadata = $metadata_backup;
 		}
 
-		// Get new sub image as imagick object from file
-		$original_imagick = new Imagick();
-		$original_imagick->readImage( $original_file_path );
+		// Convert png images to jpeg only if not transparent
+		$was_converted_to_jpeg = false;
+		if( $attachment_mime_type == 'image/png' && ! $has_transparency && self::convert_image_to_jpeg( $original_file_path ) ) {
+			// TODO: adjust file names after conversion
 
-		// Check if image is animated or still
+			// Get rid of Imagick object in memory
+			if( $original_imagick->clear() !== true ) $original_imagick->destroy();
+
+			// Get new sub image as imagick object from file
+			$original_imagick = new Imagick();
+			$original_imagick->readImage( $original_file_path . '.jpg' );
+
+			$attachment_mime_type = 'image/jpeg';
+
+			$was_converted_to_jpeg = true;
+		} elseif( $attachment_mime_type == 'image/png' ) { // Conversion failed, do nothing - TODO: handle failure more safely (restore original...?)
+
+			// Get rid of Imagick object in memory
+			if( $original_imagick->clear() !== true ) $original_imagick->destroy();
+
+			return $metadata;
+		}
+
+		// Detect if image is animated or still
 		$is_animated = $original_imagick->getNumberImages() > 1 ? true : false;
 
 		/** Use copy of original instead of current when possible to make sure original quality is always maintained when new optimizations are processed on an existing image */
@@ -145,18 +173,12 @@ class HDEV_OPTIMG_Optimize
 		$_hdev_optimg_log = array();
 
 		// Init our preset settings var
-		$preset_settings = HDEV_OPTIMG_Helper::get_optimization_mode_data( $mode );
+		$preset_settings = HDEV_OPTIMG_Helper::get_optimization_mode_data( $this->mode );
 
 		/** Fetch and filter our other settings. */
 
-		$quality  = isset( $preset_settings )
-			? $preset_settings['quality']
-			: HDEV_OPTIMG_Helper::get_single_option(
-				$optimization_settings,
-				$optimization_default_settings['quality'],
-				'quality'
-			);
-		$quality  = HDEV_OPTIMG_Helper::get_optimization_quality( $quality ); // filtered by this plugin and WordPress
+		$quality  = self::get_optimization_setting( $preset_settings, 'quality' );
+		$quality  = self::get_optimization_quality( $quality ); // filtered by this plugin and WordPress
 
 		$sharpen = apply_filters( 'hdev_optimg_sharpen', true );
 
@@ -164,35 +186,20 @@ class HDEV_OPTIMG_Optimize
 		$sRGB = true;
 
 		$interlace  = apply_filters( 'hdev_optimg_set_interlace',
-			isset( $preset_settings )
-				? $preset_settings['interlace']
-				: HDEV_OPTIMG_Helper::get_single_option(
-				$optimization_settings,
-				$optimization_default_settings['interlace'],
-				'interlace'
+			self::get_optimization_setting( $preset_settings,'interlace'
 			)
 		);
 		$interlace = $interlace == 'progressive' ? true : ( $interlace == 'deinterlace' ? false : null );
 
 		$optimize_original  = apply_filters( 'hdev_optimg_optimize_original',
-			isset( $preset_settings )
-				? $preset_settings['optimize_original']
-				: HDEV_OPTIMG_Helper::get_single_option(
-				$optimization_settings,
-				$optimization_default_settings['optimize_original'],
-				'optimize_original'
+			self::get_optimization_setting( $preset_settings,'optimize_original'
 			)
 		);
 		$optimize_original = $optimize_original == 'true' ? true : false;
 		$optimize_original = $is_animated ? false : $optimize_original; // do not optimize original if it is an animated image
 
 		$remove_metadata  = apply_filters( 'hdev_optimg_remove_metadata',
-			isset( $preset_settings )
-				? $preset_settings['remove_metadata']
-				: HDEV_OPTIMG_Helper::get_single_option(
-				$optimization_settings,
-				$optimization_default_settings['remove_metadata'],
-				'remove_metadata'
+			self::get_optimization_setting( $preset_settings,'remove_metadata'
 			)
 		);
 		$remove_metadata = $remove_metadata == 'true' ? true : false;
@@ -230,22 +237,8 @@ class HDEV_OPTIMG_Optimize
 			// Get original image aspect ratio
 			$image_ratio = $image_dimension[0] / $image_dimension[1];
 
-			// Check to make sure we are optimizing the resizing and scaling down to the correct size according to the photo ratio...etc
-			if( $image_ratio <= 1 ) {
-
-				$size_params[0] = 0;
-
-				// Make sure the image original size is preserved if smaller than max retina
-				if( $image_dimension[1] < HDEV_OPTIMG_MAX_RETINA_HEIGHT ) {
-					$size_params[1] = $image_dimension[1];
-				}
-			} else {
-
-				$size_params[1] = 0;
-
-				// Make sure the image original size is preserved if smaller than max retina
-				if( $image_dimension[0] < HDEV_OPTIMG_MAX_RETINA_WIDTH ) $size_params[0] = $image_dimension[0];
-			}
+			// Get size parameters var
+			$size_params = self::get_adjusted_size_params( $image_ratio, $image_dimension );
 
 			$image_data = array(
 				'file_path' => $original_file_path,
@@ -263,10 +256,9 @@ class HDEV_OPTIMG_Optimize
 			$original_img_optimization_params['sharpen'] = $image_dimension[0] == $size_params[0] || $image_dimension[1] == $size_params[1] ? false : apply_filters( 'hdev_optimg_sharpen', true );
 
 			// Handle doing ajax scale/crop action
-			// Make sure original is not re-optimized the same way when editing/cropping/changing-orientaion to preserve quality
+			// Make sure original is not re-optimized the same way when editing/cropping/changing-orientation to preserve quality
 			if( ! empty( $_POST['do'] ) && in_array( $_POST['do'], array( 'scale', 'crop', 'save' ) ) ) {
-				$original_img_optimization_params['lossless'] = true; // Do not compress any further, use scaled as is
-				$original_img_optimization_params['quality'] = 10;
+				//$original_img_optimization_params['lossless'] = true; // Do not compress any further, use scaled as is
 				$original_img_optimization_params['sharpen'] = apply_filters( 'hdev_optimg_sharpen', true ); // Force sharpening
 			}
 
@@ -340,10 +332,14 @@ class HDEV_OPTIMG_Optimize
 				$sub_image_name = basename( $theme_image_size_data['file'] );
 				$sub_image_path = dirname( get_attached_file( $attachment_ID, true ) ) . '/' . $sub_image_name;
 
-				// Clone original Imagick object from original (more efficient than creating new object every time)
+				// Get Imagick object
 				if( $attachment_mime_type == 'image/jpeg' ) {
+
+					// Clone original Imagick object from original (more efficient than creating new object every time)
 					$imagick = clone $original_imagick;
 				} else {
+
+					// Create new Imagick object from image resized by WP so we can apply only blur/sharpen optimization (not used for now because only jpeg optimization is active as png & gif optimization is not efficient with Imagick - may use the GD Library instead to deal with that)
 					$imagick = new Imagick();
 					$imagick->readImage( $file_dir . $metadata['sizes'][$theme_image_size]['file'] );
 				}
@@ -438,7 +434,7 @@ class HDEV_OPTIMG_Optimize
 	public function wp_imagick_optimize_image( &$imagick_object, $image_data, $optimization_params ) {
 
 		// Do nothing if the image type is not among the allowed mime types constant or if Imagick is not available
-		if( ! in_array( $image_data['mime_type'], unserialize( HDEV_OPTIMG_MIMES ) ) || ! HDEV_OPTIMG_Helper::test_imagick() ) {
+		if( ! in_array( $image_data['mime_type'], unserialize( HDEV_OPTIMG_MIMES ) ) || ! $this->imagick_active ) {
 			return array(
 				'optimized' => false,
 				'error_message' => 'This media file was not optimized because ' . $image_data['mime_type'] . ' optimization is not enabled.'
@@ -530,8 +526,7 @@ class HDEV_OPTIMG_Optimize
 				// Set jpeg image compression type
 				if( ! empty( $optimization_params['lossless'] ) && $optimization_params['lossless'] ) {
 
-					//$imagick_object->setImageCompression( Imagick::COMPRESSION_LOSSLESSJPEG ); // TODO: Lossless seems to make no difference, but we probably don't need that if we can improve plugin to re-use the backed up original file each time the image is edited and cropped or rotated
-					$imagick_object->setImageCompression( Imagick::COMPRESSION_JPEG );
+					$imagick_object->setImageCompression( Imagick::COMPRESSION_LOSSLESSJPEG ); // TODO: Lossless seems to make no difference, but we probably don't need that if we can improve plugin to re-use the backed up original file each time the image is edited and cropped or rotated
 				} else {
 
 					$imagick_object->setImageCompression( Imagick::COMPRESSION_JPEG );
@@ -642,6 +637,133 @@ class HDEV_OPTIMG_Optimize
 				return false;
 
 		endswitch;
+	}
+
+	/**
+	 * Detects image transparency
+	 *
+	 * @param $imagick_object
+	 * @param $mime_type
+	 *
+	 * @return bool
+	 */
+	public function has_transparency( $imagick_object, $mime_type ) {
+
+		// Detect transparency only for png images | else always false
+		if( $mime_type != 'image/png' ) return false;
+
+		// Get image attributes
+		$image_attributes = $imagick_object->identifyImage( true );
+
+		if( strpos( strtolower( $image_attributes['rawOutput'] ), 'rgba' ) === false ) return false;
+
+		return ! preg_match( '/Alpha:\s+min:\s+(.*?)\s+\(1\)\s+max:/i', $image_attributes['rawOutput'] );
+	}
+
+	/**
+	 * Convert an image to jpeg format
+	 *
+	 * @param $path
+	 *
+	 * @return bool
+	 */
+	public function convert_image_to_jpeg( $path ) {
+
+		$jpeg_image = imagecreatefrompng( $path );
+		$jpeg_image_bg = imagecreatetruecolor( imagesx( $jpeg_image ), imagesy( $jpeg_image ) );
+
+		imagefill( $jpeg_image_bg, 0, 0, imagecolorallocate( $jpeg_image_bg, 255, 255, 255 ) );
+		imagealphablending( $jpeg_image_bg, true );
+
+		// Proceed with conversion
+		imagecopy( $jpeg_image_bg, $jpeg_image, 0, 0, 0, 0, imagesx( $jpeg_image ), imagesy( $jpeg_image ) );
+
+		// Clear memory from object
+		imagedestroy( $jpeg_image );
+
+		$convert = imagejpeg( $jpeg_image_bg, $path . '.jpg', 100 );
+		imagedestroy( $jpeg_image_bg );
+
+		return $convert;
+	}
+
+	/**
+	 * Gets a single optimization option setting
+	 *
+	 * @param $settings
+	 * @param $setting
+	 *
+	 * @return mixed
+	 */
+	public function get_optimization_setting( $settings, $setting ) {
+
+		return isset( $settings )
+			? $settings[$setting]
+			: HDEV_OPTIMG_Helper::get_single_option(
+				$this->optimization_settings,
+				$this->optimization_default_settings[$setting],
+				$setting
+			);
+	}
+
+	/**
+	 * Gets the current optimization presets if any
+	 *
+	 * @param $quality
+	 * @return null
+	 */
+	public function get_optimization_quality( $quality ) {
+
+		// Populate our quality value
+		switch( $quality ) :
+			case 'custom' :
+				return apply_filters( 'hdev_optimg_set_quality',
+					(int) HDEV_OPTIMG_Helper::get_single_option(
+						'hdev_optimg',
+						HDEV_OPTIMG_Helper::get_optimization_defaults()['quality_val'],
+						'quality_val' )
+				);
+			case 'wp-default' :
+				return apply_filters( 'wp_editor_set_quality',
+					apply_filters( 'hdev_optimg_set_quality',
+						(int) HDEV_OPTIMG_Helper::get_optimization_quality_presets( $quality )
+					));
+			default :
+				return apply_filters( 'hdev_optimg_set_quality',
+					(int) HDEV_OPTIMG_Helper::get_optimization_quality_presets( $quality )
+				);
+		endswitch;
+	}
+
+	/**
+	 * Get the size parameters and adjusting them to take into consideration the photo ratio...etc. for the resizing and scaling down.
+	 *
+	 * @param $image_ratio
+	 * @param $image_dimension
+	 *
+	 * @return array
+	 */
+	public function get_adjusted_size_params( $image_ratio, $image_dimension ) {
+
+		$size_params = array();
+
+		if( $image_ratio <= 1 ) {
+
+			$size_params[0] = 0;
+
+			// Make sure the image original size is preserved if smaller than max retina
+			if( $image_dimension[1] < HDEV_OPTIMG_MAX_RETINA_HEIGHT ) {
+				$size_params[1] = $image_dimension[1];
+			}
+		} else {
+
+			$size_params[1] = 0;
+
+			// Make sure the image original size is preserved if smaller than max retina
+			if( $image_dimension[0] < HDEV_OPTIMG_MAX_RETINA_WIDTH ) $size_params[0] = $image_dimension[0];
+		}
+
+		return $size_params;
 	}
 
 	// End the class.

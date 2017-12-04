@@ -70,35 +70,6 @@ class HDEV_OPTIMG_Helper
     }
 
     /**
-     * Gets the current optimization presets if any
-     *
-     * @param $quality
-     * @return null
-     */
-    public static function get_optimization_quality( $quality ) {
-
-        // Populate our quality value
-        switch( $quality ) :
-            case 'custom' :
-                return apply_filters( 'hdev_optimg_set_quality',
-                    (int) self::get_single_option(
-                        'hdev_optimg',
-                        self::get_optimization_defaults()['quality_val'],
-                        'quality_val' )
-                );
-            case 'wp-default' :
-                return apply_filters( 'wp_editor_set_quality',
-                    apply_filters( 'hdev_optimg_set_quality',
-                        (int) self::get_optimization_quality_presets( $quality )
-                    ));
-            default :
-                return apply_filters( 'hdev_optimg_set_quality',
-                    (int) self::get_optimization_quality_presets( $quality )
-                );
-        endswitch;
-    }
-
-    /**
      * Gets the plugin default settings
      *
      * @return array|mixed
