@@ -178,16 +178,18 @@ class HDEV_OPTIMG_Custom_Columns
         $file_mime_type = get_post_mime_type( $post_id );
 
         // Do nothing if file is not a JPEG
-        if( ! in_array( $file_mime_type, unserialize( HDEV_OPTIMG_MIMES ) ) ) return;
+        //if( ! in_array( $file_mime_type, unserialize( HDEV_OPTIMG_MIMES ) ) && $file_mime_type != '' ) return;
 
         // Get file metadata
         $metadata = wp_get_attachment_metadata( $post_id );
+
+        if( empty( $metadata ) && ! is_array( $metadata ) ) $metadata = array( $metadata );
 
         // Get the file directory
         $file_dir = dirname( get_attached_file( $post_id ) ) . '/';
 
         // Get the original image path
-        $original_file_path = $file_dir . basename( $metadata['file'] );
+        $original_file_path = $file_dir . basename( array_key_exists( 'file', $metadata ) && ! empty( $metadata['file'] ) ? $metadata['file'] : get_post_meta( $post_id, 'wp_attached_file', true ) );
 
         // Get the the image optimization data
         $_hdev_optimg_status = get_post_meta( $post_id, '_hdev_optimg_status', true );
@@ -212,32 +214,34 @@ class HDEV_OPTIMG_Custom_Columns
         $wp_time_zone = get_option('timezone_string');
         date_default_timezone_set(! empty( $wp_time_zone ) ? $wp_time_zone : 'UTC');
 
-        // Process intermediate images
-        foreach( $metadata['sizes'] as $image_size => $image_size_data ) {
+        if( array_key_exists( 'sizes', $metadata ) ) {
+	        // Process intermediate images
+	        foreach( $metadata['sizes'] as $image_size => $image_size_data ) {
 
-            // Get the intermediate image path
-            $file_path = $file_dir . basename( $image_size_data['file'] );
+		        // Get the intermediate image path
+		        $file_path = $file_dir . basename( $image_size_data['file'] );
 
-	        // Get current image optimization status
-	        $optimization_status = ! empty( $_hdev_optimg_status ) && ! empty( $_hdev_optimg_log ) && array_key_exists( $image_size, $_hdev_optimg_log[0] ) ? '&#8212;Optimized' : '';
+		        // Get current image optimization status
+		        $optimization_status = ! empty( $_hdev_optimg_status ) && ! empty( $_hdev_optimg_log ) && array_key_exists( $image_size, $_hdev_optimg_log[0] ) ? '&#8212;Optimized' : '';
 
-            // Build output parts
-	        if( ! in_array( $image_size, $default_image_sizes ) ) {
+		        // Build output parts
+		        if( ! in_array( $image_size, $default_image_sizes ) ) {
 
-		        // Build additional images output
-		        $other_file_info .= '&#xa;&#8226;&nbsp;' . $image_size . '&#8212;(' . $image_size_data['width'] . 'x' . $image_size_data['height'] . ')&#8212;' . ( ! file_exists( $file_path ) ? 'NONEXISTENT FILE!' : round( filesize( $file_path )/1000, 1 ) ) . '&nbsp;KB' . $optimization_status . ( HDEV_OPTIMG_DEBUG && file_exists( $file_path ) ? ' | ' . date("y-m-d H:i:s", filemtime( $file_path ) ) : '' );
-	        } else {
+			        // Build additional images output
+			        $other_file_info .= '&#xa;&#8226;&nbsp;' . $image_size . '&#8212;(' . ( array_key_exists( 'width', $image_size_data ) ? $image_size_data['width'] : '' ) . 'x' . ( array_key_exists( 'height', $image_size_data ) ? $image_size_data['height'] : '' ) . ')&#8212;' . ( ! file_exists( $file_path ) ? 'NONEXISTENT FILE!' : round( filesize( $file_path )/1000, 1 ) ) . '&nbsp;KB' . $optimization_status . ( HDEV_OPTIMG_DEBUG && file_exists( $file_path ) ? ' | ' . date("y-m-d H:i:s", filemtime( $file_path ) ) : '' );
+		        } else {
 
-		        // Add previous info to output to be able to add thumbnail info last for perfect descending order
-		        $file_info_output = $previous_file_info . $file_info_output;
+			        // Add previous info to output to be able to add thumbnail info last for perfect descending order
+			        $file_info_output = $previous_file_info . $file_info_output;
 
-		        // Save file info as previous info for sorting
-		        $previous_file_info = '&#xa;&#8226;&nbsp;' . $image_size . '&#8212;(' . $image_size_data['width'] . 'x' . $image_size_data['height'] . ')&#8212;' . ( ! file_exists( $file_path ) ? 'NONEXISTENT FILE!' : round( filesize( $file_path )/1000, 1 ) ) . '&nbsp;KB' . $optimization_status . ( HDEV_OPTIMG_DEBUG && file_exists( $file_path ) ? ' | ' . date("y-m-d H:i:s", filemtime( $file_path ) ) : '' );
+			        // Save file info as previous info for sorting
+			        $previous_file_info = '&#xa;&#8226;&nbsp;' . $image_size . '&#8212;(' . ( array_key_exists( 'width', $image_size_data ) ? $image_size_data['width'] : '' ) . 'x' . ( array_key_exists( 'height', $image_size_data ) ? $image_size_data['height'] : '' ) . ')&#8212;' . ( ! file_exists( $file_path ) ? 'NONEXISTENT FILE!' : round( filesize( $file_path )/1000, 1 ) ) . '&nbsp;KB' . $optimization_status . ( HDEV_OPTIMG_DEBUG && file_exists( $file_path ) ? ' | ' . date("y-m-d H:i:s", filemtime( $file_path ) ) : '' );
+		        }
 	        }
         }
 
         // Build final output adding data from original file first
-        $file_info_output = '&#8226;&nbsp;Full' . '&#8212;(' . $metadata['width'] . 'x' . $metadata['height'] . ')&#8212;' . ( ! file_exists( $original_file_path ) ? 'NONEXISTENT FILE!' : round( filesize( $original_file_path )/1000, 1 ) ) . '&nbsp;KB&#8212;' . ucwords( $original_optimization_status ) . ( HDEV_OPTIMG_DEBUG && file_exists( $original_file_path ) ? ' | ' . date("y-m-d H:i:s", filemtime( $original_file_path ) ) : '' ) . $previous_file_info . $file_info_output . $other_file_info;
+        $file_info_output = '&#8226;&nbsp;Full' . '&#8212;(' . ( array_key_exists( 'width', $metadata ) ? $metadata['width'] : '' ) . 'x' . ( array_key_exists( 'height', $metadata ) ? $metadata['height'] : '' ) . ')&#8212;' . ( ! file_exists( $original_file_path ) ? 'NONEXISTENT FILE!' : round( filesize( $original_file_path )/1000, 1 ) ) . '&nbsp;KB&#8212;' . ucwords( $original_optimization_status ) . ( HDEV_OPTIMG_DEBUG && file_exists( $original_file_path ) ? ' | ' . date("y-m-d H:i:s", filemtime( $original_file_path ) ) : '' ) . $previous_file_info . $file_info_output . $other_file_info;
 
         // Put together the optimization details
         if( ! empty( $_hdev_optimg_log ) ) {

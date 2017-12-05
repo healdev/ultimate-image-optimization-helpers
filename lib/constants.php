@@ -38,6 +38,7 @@ if ( ! defined( 'HDEV_OPTIMG_DEFAULT_SETTINGS' ) ) {
     define( 'HDEV_OPTIMG_DEFAULT_SETTINGS', serialize(
         array(
             'mode' => 'balanced',
+            'convert' => '0',
             'quality'=> 'high',
             'quality_val'=> '60',
             'sharpen'=> '1',

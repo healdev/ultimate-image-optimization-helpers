@@ -16,8 +16,15 @@ if( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
  */
 class HDEV_OPTIMG_Optimize
 {
-
-	private $optimization_settings, $optimization_default_settings, $mode, $imagick_optimization_active, $imagick_active;
+	// define our class properties
+	private $optimization_settings,
+		$optimization_default_settings,
+		$mode,
+		$imagick_optimization_active,
+		$imagick_active,
+		$root_imagick_object = null,
+		$mode_independent_settings = array( 'convert' ),
+		$convert;
 
 	/**
 	 * Load our hooks and filters.
@@ -40,9 +47,18 @@ class HDEV_OPTIMG_Optimize
 				'mode' )
 		);
 
+		// Fetch and filter our conversion setting.
+		$this->convert  = apply_filters( 'hdev_optimg_set_mode',
+			HDEV_OPTIMG_Helper::get_single_option(
+				$this->optimization_settings,
+				$this->optimization_default_settings['convert'],
+				'convert' )
+		);
+
 		// Check and filter if optimization is active
 		$this->imagick_optimization_active = apply_filters( 'hdev_activate_imagick_image_optimization', $this->mode !== 'disabled' );
 
+		// Check if PHP version used has Imagick with the necessary active
 		$this->imagick_active = HDEV_OPTIMG_Helper::test_imagick();
 
 		// Optimize images after they are uploaded
@@ -57,6 +73,20 @@ class HDEV_OPTIMG_Optimize
 
 		// Handle cleanup when attachment is deleted
 		add_action( 'delete_attachment',                  array( $this, 'cleanup_deleted_image'  ), 9999, 2  );
+
+		// Handle image conversion
+		add_filter( 'wp_handle_upload_prefilter',         array( $this, 'convert_image_to_jpeg'   ), 9999     );
+
+		// Resize image with preserved aspect ration to optimize website bandwidth consumption
+		/*add_filter( 'hdev_optimize_original_img_size_params', function( $size_params ) {
+			if( intval( $size_params[0] ) <= MAX_SUPPORTED_RETINA_WIDTH && intval( $size_params[1] ) <= MAX_SUPPORTED_RETINA_WIDTH )
+			{
+				return $size_params;
+			}
+
+			return array( MAX_SUPPORTED_RETINA_WIDTH, MAX_SUPPORTED_RETINA_HEIGHT ); // original will be used as x-retina size
+		});*/
+
 	}
 
 	/**
@@ -77,28 +107,33 @@ class HDEV_OPTIMG_Optimize
 		}
 
 		// Do nothing if the image type is not among the allowed mime types constant or if Imagick is not available or if optimization is deactivated
-		if ( ! $this->imagick_optimization_active || ! in_array( $attachment_mime_type, unserialize( HDEV_OPTIMG_MIMES ) ) || ! $this->imagick_active ) return $metadata;
+		if ( ! $this->imagick_optimization_active || ! in_array( $attachment_mime_type, unserialize( HDEV_OPTIMG_MIMES ) ) || ! $this->imagick_active ) {
+
+			// Get rid of Imagick object in memory if is was set during file upload
+			if( isset( $this->root_imagick_object ) && $this->root_imagick_object->clear() !== true ) $this->root_imagick_object->destroy();
+
+			return $metadata;
+		}
 
 		// Get the file directory
 		$file_dir = dirname( get_attached_file( $attachment_ID ) ) . '/';
 
+		// Safely get attached file
+		$_wp_attached_file = array_key_exists( 'file', $metadata ) && ! empty( $metadata['file'] ) ? $metadata['file'] : get_post_meta( $attachment_ID, 'wp_attached_file', true );
+
 		// Get the original image path
-		$original_file_path = $file_dir . basename( $metadata['file'] );
+		$original_file_path = $file_dir . basename( $_wp_attached_file );
 
-		// Get new sub image as imagick object from file
-		$original_imagick = new Imagick();
-		$original_imagick->readImage( $original_file_path );
+		// Get original image imagick object
+		if( empty( $this->root_imagick_object ) ) {
 
-		// Detect if image has transparency so png to jpeg is applied only when no transparency is detected
-		$has_transparency = self::has_transparency( $original_imagick, $attachment_mime_type );
+			// Get original image as imagick object from file
+			$original_imagick = new Imagick();
+			$original_imagick->readImage( $original_file_path );
+		} else {
 
-		// Do nothing if image is png with transparency
-		if( $attachment_mime_type == 'image/png' && $has_transparency ) {
-
-			// Get rid of Imagick object in memory
-			if( $original_imagick->clear() !== true ) $original_imagick->destroy();
-
-			return $metadata;
+			// Get original image from root imagick object
+			$original_imagick = $this->root_imagick_object;
 		}
 
 		// Set path info for copy of original image if set previously
@@ -111,29 +146,6 @@ class HDEV_OPTIMG_Optimize
 		if( isset( $_POST['do'] ) && in_array( $_POST['do'], array( 'restore' ) ) && ! empty( $metadata_backup ) ) {
 
 			$metadata = $metadata_backup;
-		}
-
-		// Convert png images to jpeg only if not transparent
-		$was_converted_to_jpeg = false;
-		if( $attachment_mime_type == 'image/png' && ! $has_transparency && self::convert_image_to_jpeg( $original_file_path ) ) {
-			// TODO: adjust file names after conversion
-
-			// Get rid of Imagick object in memory
-			if( $original_imagick->clear() !== true ) $original_imagick->destroy();
-
-			// Get new sub image as imagick object from file
-			$original_imagick = new Imagick();
-			$original_imagick->readImage( $original_file_path . '.jpg' );
-
-			$attachment_mime_type = 'image/jpeg';
-
-			$was_converted_to_jpeg = true;
-		} elseif( $attachment_mime_type == 'image/png' ) { // Conversion failed, do nothing - TODO: handle failure more safely (restore original...?)
-
-			// Get rid of Imagick object in memory
-			if( $original_imagick->clear() !== true ) $original_imagick->destroy();
-
-			return $metadata;
 		}
 
 		// Detect if image is animated or still
@@ -149,7 +161,7 @@ class HDEV_OPTIMG_Optimize
 			}
 		} elseif( ! $is_animated ) { // Create a backup of the original image only if it is not animated
 
-			$file_path_parts = pathinfo( $metadata['file'] );
+			$file_path_parts = pathinfo( $_wp_attached_file );
 			$new_original_file_name = $file_path_parts['filename'] . '__ORIGINAL.' . $file_path_parts['extension'];
 			$new_original_file_path = $file_dir . $new_original_file_name;
 
@@ -266,7 +278,7 @@ class HDEV_OPTIMG_Optimize
 			$original_image_optimized = self::wp_imagick_optimize_image( $imagick, $image_data, $original_img_optimization_params );
 
 			// Get rid of the Imagick object in memory
-			if( $imagick->clear() !== true ) $imagick->destroy();
+			if( isset( $imagick ) && $imagick->clear() !== true ) $imagick->destroy();
 
 			// Unsuccessful optimization validation event logging
 			if( ! $original_image_optimized['optimized'] ) {
@@ -308,7 +320,7 @@ class HDEV_OPTIMG_Optimize
 		if( ! empty( $original_copy_file ) && isset( $_POST['do'] ) && $_POST['do'] == 'scale' ) {
 
 			// Get rid of Imagick object in memory first
-			if( $original_imagick->clear() !== true ) $original_imagick->destroy();
+			if( isset( $original_imagick ) && $original_imagick->clear() !== true ) $original_imagick->destroy();
 
 			// Get new imagick object from original backed up file
 			$original_imagick = new Imagick();
@@ -357,7 +369,7 @@ class HDEV_OPTIMG_Optimize
 				$image_optimized = self::wp_imagick_optimize_image( $imagick, $sub_image_data, $optimization_params );
 
 				// Get rid of the Imagick object in memory
-				if( $imagick->clear() !== true ) $imagick->destroy();
+				if( isset( $imagick ) && $imagick->clear() !== true ) $imagick->destroy();
 
 				// Unsuccessful optimization validation event logging
 				if( ! $image_optimized['optimized'] ) {
@@ -418,7 +430,8 @@ class HDEV_OPTIMG_Optimize
 		update_post_meta( $attachment_ID, '_hdev_optimg_log', $_hdev_optimg_log );
 
 		// Get rid of Imagick object in memory
-		if( $original_imagick->clear() !== true ) $original_imagick->destroy();
+		if( isset( $original_imagick ) && $original_imagick->clear() !== true ) $original_imagick->destroy();
+		if( isset( $this->root_imagick_object ) && $this->root_imagick_object->clear() !== true ) $this->root_imagick_object->destroy();
 
 		return $metadata;
 	}
@@ -661,44 +674,17 @@ class HDEV_OPTIMG_Optimize
 	}
 
 	/**
-	 * Convert an image to jpeg format
-	 *
-	 * @param $path
-	 *
-	 * @return bool
-	 */
-	public function convert_image_to_jpeg( $path ) {
-
-		$jpeg_image = imagecreatefrompng( $path );
-		$jpeg_image_bg = imagecreatetruecolor( imagesx( $jpeg_image ), imagesy( $jpeg_image ) );
-
-		imagefill( $jpeg_image_bg, 0, 0, imagecolorallocate( $jpeg_image_bg, 255, 255, 255 ) );
-		imagealphablending( $jpeg_image_bg, true );
-
-		// Proceed with conversion
-		imagecopy( $jpeg_image_bg, $jpeg_image, 0, 0, 0, 0, imagesx( $jpeg_image ), imagesy( $jpeg_image ) );
-
-		// Clear memory from object
-		imagedestroy( $jpeg_image );
-
-		$convert = imagejpeg( $jpeg_image_bg, $path . '.jpg', 100 );
-		imagedestroy( $jpeg_image_bg );
-
-		return $convert;
-	}
-
-	/**
 	 * Gets a single optimization option setting
 	 *
-	 * @param $settings
+	 * @param $preset_settings
 	 * @param $setting
 	 *
 	 * @return mixed
 	 */
-	public function get_optimization_setting( $settings, $setting ) {
+	public function get_optimization_setting( $preset_settings, $setting ) {
 
-		return isset( $settings )
-			? $settings[$setting]
+		return ! empty( $preset_settings ) && ! in_array( $setting, $this->mode_independent_settings )
+			? $preset_settings[$setting]
 			: HDEV_OPTIMG_Helper::get_single_option(
 				$this->optimization_settings,
 				$this->optimization_default_settings[$setting],
@@ -764,6 +750,75 @@ class HDEV_OPTIMG_Optimize
 		}
 
 		return $size_params;
+	}
+
+	/**
+	 * Return the correct error message depending on what type of photo is being uploaded by editors (admin can bypass some of these by uploading directly from the media library but Piklist field validation will catch up when trying to assign these images to file field types)
+	 *
+	 * // Optimize images using Imagick if active
+	 *
+	 * @param $file
+	 * @return mixed
+	 */
+	public function convert_image_to_jpeg( $file ) {
+
+		// Do nothing if the image isn't a png or if Imagick is not available or if optimization is deactivated
+		if ( ! $this->imagick_optimization_active || $file['type'] != 'image/png' || ! $this->imagick_active || $file['error'] || ! $this->convert ) return $file;
+
+		// Get image as imagick object from file
+		$this->root_imagick_object = new Imagick();
+		$this->root_imagick_object->readImage( $file['tmp_name'] );
+
+		// Detect if image has transparency so png to jpeg is applied only when no transparency is detected
+		$has_transparency = self::has_transparency( $this->root_imagick_object, $file['type'] );
+
+		// Init conversion check var
+		$was_converted_to_jpeg = false;
+
+		// Convert png images to jpeg only if not transparent
+		if( ! $has_transparency ) {
+
+			$jpeg_image = imagecreatefrompng( $file['tmp_name'] );
+			$jpeg_image_bg = imagecreatetruecolor( imagesx( $jpeg_image ), imagesy( $jpeg_image ) );
+
+			imagefill( $jpeg_image_bg, 0, 0, imagecolorallocate( $jpeg_image_bg, 255, 255, 255 ) );
+			imagealphablending( $jpeg_image_bg, true );
+
+			// Proceed with conversion
+			imagecopy( $jpeg_image_bg, $jpeg_image, 0, 0, 0, 0, imagesx( $jpeg_image ), imagesy( $jpeg_image ) );
+
+			// Clear memory from png GD object
+			imagedestroy( $jpeg_image );
+
+			// create jpeg image and write it to file
+			$was_converted_to_jpeg = imagejpeg( $jpeg_image_bg, $file['tmp_name'], 100 );
+
+			// Clear memory from jpeg GD object
+			imagedestroy( $jpeg_image_bg );
+		}
+
+		// Update converted file info
+		if( $was_converted_to_jpeg ) {
+
+			// Update file name extension
+			$file['name'] = pathinfo( $file['name'] )['filename'] . '.jpg';
+
+			// Update file type
+			$file['type'] = 'image/jpeg';
+
+			// Update file size
+			$file['size'] = (int) filesize( $file['tmp_name'] );
+
+			// Get rid of the root Imagick object in memory
+			if( isset( $this->root_imagick_object ) && $this->root_imagick_object->clear() !== true ) $this->root_imagick_object->destroy();
+			$this->root_imagick_object = null;
+
+			if( empty( $this->root_imagick_object ) ) {
+				update_user_meta(1,'hdev-convert-check-root', $file);
+			}
+		}
+
+		return $file;
 	}
 
 	// End the class.

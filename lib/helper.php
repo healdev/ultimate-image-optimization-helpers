@@ -84,14 +84,14 @@ class HDEV_OPTIMG_Helper
 
         // Fallback if constant is not defined
         return array(
-            'mode' => 'preset',
-            'preset' => 'balanced',
-            'quality'=> 'high',
-            'quality_val'=> '65',
-            'sharpen'=> '1',
-            'interlace'=> 'origin',
-            'optimize_original'=> 'true',
-            'remove_metadata'=> 'true'
+	        'mode' => 'balanced',
+	        'convert' => '0',
+	        'quality'=> 'high',
+	        'quality_val'=> '60',
+	        'sharpen'=> '1',
+	        'interlace'=> 'origin',
+	        'optimize_original'=> 'true',
+	        'remove_metadata'=> 'true'
         );
     }
 

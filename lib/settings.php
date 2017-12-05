@@ -15,6 +15,8 @@ if( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
  */
 class HDEV_OPTIMG_Settings
 {
+	private $default_settings,
+		$optimization_options;
 
 	/**
 	 * Load our hooks and filters.
@@ -22,6 +24,21 @@ class HDEV_OPTIMG_Settings
 	 * @return void
 	 */
 	public function init() {
+
+		// Get default settings
+		$this->default_settings = HDEV_OPTIMG_Helper::get_optimization_defaults();
+
+		// Fetch the optimization options
+		$this->optimization_options = get_option( 'hdev_optimg' );
+
+		// Make sure we use the default settings if no options set by user yet (fixes issue with checkboxes when no options are set yet)
+		if( empty( $this->optimization_options ) ) {
+			$this->optimization_options = $this->default_settings;
+
+			// Populate the database option
+			update_option( 'hdev_optimg', $this->default_settings );
+		}
+
 		add_action( 'admin_init',                   array( $this, 'load_settings'       )           );
 	}
 
@@ -129,32 +146,29 @@ class HDEV_OPTIMG_Settings
 	 */
 	public function settings_optimg( $args ) {
 
-	    // Get default optimization settings
-        $default_settings = HDEV_OPTIMG_Helper::get_optimization_defaults();
-
         // Get preset optimization settings
         $mode_preset_settings = HDEV_OPTIMG_Helper::get_optimization_mode_presets();
 
-        // Fetch the optimization options
-        $optimization_options = get_option( 'hdev_optimg' );
-
 		// Fetch our stored settings.
-        $mode  = HDEV_OPTIMG_Helper::get_single_option( $optimization_options, $default_settings['mode'], 'mode' );
+        $mode  = HDEV_OPTIMG_Helper::get_single_option( $this->optimization_options, $this->default_settings['mode'], 'mode' );
 
-        $quality  = HDEV_OPTIMG_Helper::get_single_option( $optimization_options, $default_settings['quality'], 'quality' );
+		$convert = HDEV_OPTIMG_Helper::get_single_option( $this->optimization_options, $this->default_settings['convert'], 'convert' ); // To save correct setting - use in data_sanitize function and checkbox value
 
-        $quality_val  = HDEV_OPTIMG_Helper::get_single_option( $optimization_options, $default_settings['quality_val'], 'quality_val' );
+        $quality  = HDEV_OPTIMG_Helper::get_single_option( $this->optimization_options, $this->default_settings['quality'], 'quality' );
 
-		$sharpen = HDEV_OPTIMG_Helper::get_single_option( $optimization_options, $default_settings['sharpen'], 'sharpen' ); // To save correct setting - use in data_sanitize function and checkbox value
+        $quality_val  = HDEV_OPTIMG_Helper::get_single_option( $this->optimization_options, $this->default_settings['quality_val'], 'quality_val' );
 
-        $interlace  = HDEV_OPTIMG_Helper::get_single_option( $optimization_options, $default_settings['interlace'], 'interlace' );
+		$sharpen = HDEV_OPTIMG_Helper::get_single_option( $this->optimization_options, $this->default_settings['sharpen'], 'sharpen' ); // To save correct setting - use in data_sanitize function and checkbox value
 
-        $optimize_original  = HDEV_OPTIMG_Helper::get_single_option( $optimization_options, $default_settings['optimize_original'], 'optimize_original' );
+        $interlace  = HDEV_OPTIMG_Helper::get_single_option( $this->optimization_options, $this->default_settings['interlace'], 'interlace' );
 
-        $remove_metadata  = HDEV_OPTIMG_Helper::get_single_option( $optimization_options, $default_settings['remove_metadata'], 'remove_metadata' );
+        $optimize_original  = HDEV_OPTIMG_Helper::get_single_option( $this->optimization_options, $this->default_settings['optimize_original'], 'optimize_original' );
+
+        $remove_metadata  = HDEV_OPTIMG_Helper::get_single_option( $this->optimization_options, $this->default_settings['remove_metadata'], 'remove_metadata' );
 
         // To fix checkbox always checked - use with checked() function only
-        $sharpen_checkbox_check  = HDEV_OPTIMG_Helper::get_single_option_checkbox( $optimization_options, $default_settings['sharpen'], 'sharpen' );
+        $sharpen_checkbox_check  = HDEV_OPTIMG_Helper::get_single_option_checkbox( $this->optimization_options, $this->default_settings['sharpen'], 'sharpen' );
+		$conversion_checkbox_check  = HDEV_OPTIMG_Helper::get_single_option_checkbox( $this->optimization_options, $this->default_settings['convert'], 'convert' );
 
         // Modes visibility
         $mode_hidden = $mode != 'advanced' ? 'style="display:none;"' : '';
@@ -179,32 +193,11 @@ class HDEV_OPTIMG_Settings
                 // Add our intro content.
                 echo '<p>' . esc_html__( 'Easily optimize JPEG images for better quality and faster page load.' , 'hdev-l10i-optimg' ) . '</p>';
 
-                echo '<p><strong><u>' . esc_html__( 'Important Note' , 'hdev-l10i-optimg' ) . '</u></strong>: ' . esc_html__( 'New optimization settings will only affect future uploaded images.' , 'hdev-l10i-optimg' ) . '<br>' . esc_html__( 'To apply new optimizations to previously uploaded images, we recommend regenerating them using this plugin: ' , 'hdev-l10i-optimg' ) . ' <a href="https://wordpress.org/plugins/regenerate-thumbnails/" target="_blank">' . esc_html__('Regenerate Thumbnails', 'hdev-l10i-optimg' ) . '</a> ' . esc_html__('by Alex Mills', 'hdev-l10i-optimg' ) . '</p>';
+                echo '<p style="margin:0;"><strong><u>' . esc_html__( 'Important Note' , 'hdev-l10i-optimg' ) . '</u></strong>: ' . esc_html__( 'New optimization settings will only affect future uploaded images.' , 'hdev-l10i-optimg' ) . '</p><p style="margin:0;">' . esc_html__( 'To apply new optimizations to previously uploaded images, we recommend regenerating them using this plugin: ' , 'hdev-l10i-optimg' ) . ' <a href="https://wordpress.org/plugins/regenerate-thumbnails/" target="_blank">' . esc_html__('Regenerate Thumbnails', 'hdev-l10i-optimg' ) . '</a> ' . esc_html__('by Alex Mills', 'hdev-l10i-optimg' ) . '</p>';
 
                 // Now set up the table with each value.
                 echo '<table id="' . esc_attr( $args['id'] ) . '" class="hdev-optimg-settings-table form-table">';
                 echo '<tbody>';
-
-                    // Our mode checkbox field.
-                    /*echo '<tr id="hdev-optimg-mode-container">';
-
-                        // The field label.
-                        echo '<th scope="row">';
-                            echo esc_html__( 'Mode', 'hdev-l10i-optimg' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( '"Preset" - quickly configure the optimization engine for most use cases.', 'hdev-l10i-optimg' ) . '&#xa;&#8212;&#8212;&#8212;&#8212;&#xa;' . esc_html__( '"Advanced" - for expert, use if you need more control over the process.', 'hdev-l10i-optimg' ) . '"><span class="icon-help"></span></div>';
-                        echo '</th>';
-
-                        // The input field.
-                        echo '<td>';
-
-                            echo '<select id="hdev-optimg-mode" name="hdev_optimg[mode]">';
-                                echo '<option value="preset" ' . selected( $mode, 'preset', false ) . '>' . esc_html__( 'preset', 'hdev-l10i-optimg' ) . '</option>';
-                                echo '<option value="advanced" ' . selected( $mode, 'advanced', false ) . '>' . esc_html__( 'Advanced', 'hdev-l10i-optimg' ) . '</option>';
-                            echo '</select>';
-
-                        echo '</td>';
-
-                    // Close our mode radio field.
-                    echo '</tr>';*/
 
                     // Our mode radio field.
                     echo '<tr id="hdev-optimg-mode-container">';
@@ -223,7 +216,7 @@ class HDEV_OPTIMG_Settings
 
                             echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-mode-hd">';
                             echo '<input type="radio" id="hdev-optimg-mode-hd" name="hdev_optimg[mode]" value="hd" ' . checked( $mode, 'hd', false ) . ' />';
-                            echo esc_html__( 'HD (high image quality | descent compression, recommended for image driven websites)', 'hdev-l10i-optimg' ) . '</label>';
+                            echo '<span style="color:#000;background-color:rgba(0,0,0,.05);">' . 'HD (' . esc_html__( 'high image quality | descent compression', 'hdev-l10i-optimg' ) . ', <u>' . esc_html__( 'highly recommended', 'hdev-l10i-optimg' ) . '</u> - ' . esc_html__( 'for image driven websites)', 'hdev-l10i-optimg' ) . '</span></label>';
 
                             echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-mode-performance">';
                             echo '<input type="radio" id="hdev-optimg-mode-performance" name="hdev_optimg[mode]" value="performance" ' . checked( $mode, 'performance', false ) . ' />';
@@ -241,6 +234,25 @@ class HDEV_OPTIMG_Settings
 
                     // Close our mode radio field.
                     echo '</tr>';
+
+					// Our conversion checkbox field.
+		            echo '<tr id="hdev-optimg-conversion-container">';
+
+		                // The field label.
+			            echo '<th scope="row">';
+			                echo esc_html__( 'PNG to JPEG Conversion', 'hdev-l10i-optimg' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'Message here', 'hdev-l10i-optimg' ) . '"><span class="icon-help"></span></div>';
+			            echo '</th>';
+
+			            // The input field.
+			            echo '<td>';
+
+				            echo '<input name="hdev_optimg[convert]" type="checkbox" id="hdev-optimg-convert" value="' . $convert . '" ' . checked( $conversion_checkbox_check, '1', false ) . ' />';
+				            echo '<label for="hdev-optimg-convert"> ' .  esc_html__( 'Convert non-transparent PNG images to JPEG (recommended)', 'hdev-l10i-optimg' ) . '</label>';
+
+			            echo '</td>';
+
+		            // Close our blur/sharpening radio field.
+		            echo '</tr>';
 
                     // Our quality radio field.
                     echo '<tr class="hdev-optimg-mode-target' . $mode_hidden_class . '" ' . $mode_hidden . '>';
@@ -273,14 +285,14 @@ class HDEV_OPTIMG_Settings
                             echo '<input type="radio" id="hdev-optimg-quality-custom" name="hdev_optimg[quality]" value="custom" ' . checked( $quality, 'custom', false ) . ' />';
                             echo esc_html__( 'Custom', 'hdev-l10i-optimg' ) . ' ' . esc_html__( 'compression rate', 'hdev-l10i-optimg' );
 
-                            echo '<input ' . $quality_val_hidden . ' type="number" id="hdev-optimg-quality-custom-val" name="hdev_optimg[quality_val]" value="' . $quality_val . '" step="1" min="0" max="100" class="small-text ' . $quality_val_hidden_class . '" ' . disabled( $quality,'high', false ) . disabled( $quality,'wp_default', false ) . '>' . '</label>';
+                            echo '<input ' . $quality_val_hidden . ' type="number" id="hdev-optimg-quality-custom-val" name="hdev_optimg[quality_val]" value="' . $quality_val . '" step="1" min="0" max="100" class="small-text ' . $quality_val_hidden_class . '" >' . '</label>';
 
                         echo '</td>';
 
                     // Close our quality radio field.
                     echo '</tr>';
 
-                    // Our sharpening checkbox field.
+                    // Our blur/sharpening checkbox field.
                     echo '<tr class="hdev-optimg-mode-target' . $mode_hidden_class . '" ' . $mode_hidden . '>';
 
                         // The field label.
@@ -296,7 +308,7 @@ class HDEV_OPTIMG_Settings
 
                         echo '</td>';
 
-                    // Close our sharpening radio field.
+                    // Close our blur/sharpening radio field.
                     echo '</tr>';
 
                     // Our interlace radio field.
@@ -402,40 +414,40 @@ class HDEV_OPTIMG_Settings
 	    // Populated our input
 		if( empty( $input ) ) {
             $input = $_POST['hdev_optimg'];
-        }
-
-        // Get default optimization settings
-        $optimization_default_settings = HDEV_OPTIMG_Helper::get_optimization_defaults();
+        }update_user_meta(1,'hdev-hey',$input['convert']);
 
         // Make sure we have an array.
         $input  = (array) $input;
 
         // Sanitize the quality radio input.
-        $mode  = ! empty( $input['mode'] ) ? sanitize_text_field( $input['mode'] ) : $optimization_default_settings['mode'];
+        $mode  = ! empty( $input['mode'] ) ? sanitize_text_field( $input['mode'] ) : $this->default_settings['mode'];
 
         // Init our preset settings var
         $mode_preset_settings = HDEV_OPTIMG_Helper::get_optimization_mode_data( $mode );
 
+		// Sanitize the conversion checkbox input.
+		$convert  =  isset( $input['convert'] ) ? '1' : '0';
+
 		// Sanitize the quality radio input.
-		$quality  = isset( $mode_preset_settings ) ? $mode_preset_settings['quality'] : ( ! empty( $input['quality'] ) ? sanitize_text_field( $input['quality'] ) : $optimization_default_settings['quality'] );
+		$quality  = isset( $mode_preset_settings ) ? $mode_preset_settings['quality'] : ( ! empty( $input['quality'] ) ? sanitize_text_field( $input['quality'] ) : $this->default_settings['quality'] );
 
         // Sanitize the quality radio input.
-        $quality_val  = isset( $mode_preset_settings ) ? $mode_preset_settings['quality_val'] : ( ! empty( $input['quality_val'] ) ? sanitize_text_field( $input['quality_val'] ) : $optimization_default_settings['quality_val'] );
+        $quality_val  = isset( $mode_preset_settings ) ? $mode_preset_settings['quality_val'] : ( ! empty( $input['quality_val'] ) ? sanitize_text_field( $input['quality_val'] ) : $this->default_settings['quality_val'] );
 
-        // Sanitize the sharpening checkbox input.
-        $sharpen  = isset( $mode_preset_settings ) ? $mode_preset_settings['sharpen'] : ( ! empty( $input['sharpen'] ) ? sanitize_text_field( $input['sharpen'] ) : $optimization_default_settings['sharpen'] );
+        // Sanitize the blur/sharpening checkbox input.
+        $sharpen  = isset( $input['sharpen'] ) ? '1' : $this->default_settings['sharpen']; // Always = 1 unless filtered later on
 
         // Sanitize the interlace scheme radio input.
-        $interlace  = isset( $mode_preset_settings ) ? $mode_preset_settings['interlace'] : ( ! empty( $input['interlace'] ) ? sanitize_text_field( $input['interlace'] ) : $optimization_default_settings['interlace'] );
+        $interlace  = isset( $mode_preset_settings ) ? $mode_preset_settings['interlace'] : ( ! empty( $input['interlace'] ) ? sanitize_text_field( $input['interlace'] ) : $this->default_settings['interlace'] );
 
         // Sanitize the original compression radio input.
-        $optimize_original  = isset( $mode_preset_settings ) ? $mode_preset_settings['optimize_original'] : ( isset( $mode_preset_settings ) ? $mode_preset_settings['quality_val'] : ( ! empty( $input['optimize_original'] ) ? sanitize_text_field( $input['optimize_original'] ) : $optimization_default_settings['optimize_original'] ) );
+        $optimize_original  = isset( $mode_preset_settings ) ? $mode_preset_settings['optimize_original'] : ( isset( $mode_preset_settings ) ? $mode_preset_settings['quality_val'] : ( ! empty( $input['optimize_original'] ) ? sanitize_text_field( $input['optimize_original'] ) : $this->default_settings['optimize_original'] ) );
 
         // Sanitize the remove_metadata radio input.
-        $remove_metadata  = isset( $mode_preset_settings ) ? $mode_preset_settings['remove_metadata'] : ( ! empty( $input['remove_metadata'] ) ? sanitize_text_field( $input['remove_metadata'] ) : $optimization_default_settings['remove_metadata'] );
+        $remove_metadata  = isset( $mode_preset_settings ) ? $mode_preset_settings['remove_metadata'] : ( ! empty( $input['remove_metadata'] ) ? sanitize_text_field( $input['remove_metadata'] ) : $this->default_settings['remove_metadata'] );
 
 		// Set our new input array.
-		$input  = array( 'mode' => $mode, 'quality' => $quality, 'quality_val' => $quality_val, 'sharpen' => $sharpen, 'interlace' => $interlace, 'optimize_original' => $optimize_original, 'remove_metadata' => $remove_metadata );
+		$input  = array( 'mode' => $mode, 'convert' => $convert, 'quality' => $quality, 'quality_val' => $quality_val, 'sharpen' => $sharpen, 'interlace' => $interlace, 'optimize_original' => $optimize_original, 'remove_metadata' => $remove_metadata );
 
 		// And return our input with a filter to allow
 		// additional settings to be added later.
