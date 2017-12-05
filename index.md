@@ -1,8 +1,19 @@
-## Welcome to GitHub Pages for this WP plugin
+## Ultimate Image Optimization Helpers
 
-You can use the [editor on GitHub](https://github.com/healdev/wp-ultimate-image-optimization-helpers/edit/master/index.md) to maintain and preview the content for your website in Markdown files.
+This plugin offers the following features and optimization capabilities:
 
-Whenever  you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+#### Dashboard -> Settings -> Media
+1. Displays a list of all image sizes added by the current theme and plugins for your referance.
+2. Allows to choose between a variety of easy optimization presets.
+2. Allows to enable/disable png to jpeg conversion.
+3. Provides a completely custom optimization interface for advanced user:
+- Adjust the image compression rate.
+- Enhanced quality* feature.
+- Set tmage interlace scheme (pregressive, interlaced or preserve original.)
+- Enable/disable original image optimization (keeps a copy of the original for reference or future processing.)
+- Remove the meta/exif data to reduce image file size (orientation exif data is preserved)
+
+* By default, the plugin applies a light blur/sharpening filter to compensate for the quality loss occuring when WordPress generates intermediate sizes by resizing the original image to unsure the best quality is preserved.
 
 ### Markdown
 
@@ -15,7 +26,7 @@ Syntax highlighted code block
 ## Header 2
 ### Header 3
 
-- Bulleted
+
 - List
 
 1. Numbered
