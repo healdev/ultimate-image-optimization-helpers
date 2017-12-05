@@ -1,4 +1,4 @@
-## Welcome to GitHub Pages
+## Welcome to GitHub Pages for this WP plugin
 
 You can use the [editor on GitHub](https://github.com/healdev/wp-ultimate-image-optimization-helpers/edit/master/index.md) to maintain and preview the content for your website in Markdown files.
 
