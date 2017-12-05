@@ -13,7 +13,7 @@ This plugin offers the following features and optimization capabilities:
 
 4. Provides a completely custom optimization interface for advanced users:
 - Adjust the image compression rate.
-- Enhanced quality* feature (applies a light blur/sharpening filter to compensate for the quality loss occuring when WordPress generates intermediate sizes by resizing the original image to unsure the best quality is preserved).
+- Enhanced quality feature (applies a light blur/sharpening filter to compensate for the quality loss occuring when WordPress generates intermediate sizes by resizing the original image to unsure the best quality is preserved).
 - Set tmage interlace scheme (pregressive, interlaced or preserve original.)
 - Enable/disable original image optimization (keeps a copy of the original for reference or future processing.)
 - Remove the meta/exif data to reduce image file size (orientation exif data is preserved)
