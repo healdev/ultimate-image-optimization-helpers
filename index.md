@@ -4,8 +4,11 @@ This plugin offers the following features and optimization capabilities:
 
 #### Dashboard -> Settings -> Media
 1. Displays a list of all image sizes added by the current theme and plugins for your referance.
+
 2. Allows to choose between a variety of easy optimization presets.
+
 2. Allows to enable/disable png to jpeg conversion.
+
 3. Provides a completely custom optimization interface for advanced user:
 - Adjust the image compression rate.
 - Enhanced quality* feature.
