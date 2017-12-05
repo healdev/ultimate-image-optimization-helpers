@@ -1,7 +1,10 @@
+- ** Release 0.2.3 December 5th 2017 **
+              - Fix: filter hdev_optimg_set_conversion wrongly set to hdev_optimg_set_mode in class HDEV_OPTIMG_Optimize.
+
 - ** Release 0.2.2 December 4rd 2017 **
               - Added png to jpeg conversion feature
               - Admin interface tweaks. 
-              - Fix: unable to set the custom compression rate (field was disabled)
+              - Fix: unable to set the custom compression rate (field was disabled.)
               - Minor fixes and adjustments.
 
 - ** Release 0.1.3 December 3rd 2017 **

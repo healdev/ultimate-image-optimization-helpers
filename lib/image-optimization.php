@@ -48,7 +48,7 @@ class HDEV_OPTIMG_Optimize
 		);
 
 		// Fetch and filter our conversion setting.
-		$this->convert  = apply_filters( 'hdev_optimg_set_mode',
+		$this->convert  = apply_filters( 'hdev_optimg_set_conversion',
 			HDEV_OPTIMG_Helper::get_single_option(
 				$this->optimization_settings,
 				$this->optimization_default_settings['convert'],
