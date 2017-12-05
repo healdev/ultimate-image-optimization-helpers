@@ -9,7 +9,7 @@ This plugin offers the following features and optimization capabilities:
 
 2. Allows to choose between a variety of easy optimization presets.
 
-3. Allows to enable/disable png to jpeg conversion.
+3. Allows to enable/disable png to jpeg conversion (for non-trensparent png images only.)
 
 4. Provides a completely custom optimization interface for advanced users:
 - Adjust the image compression rate.
