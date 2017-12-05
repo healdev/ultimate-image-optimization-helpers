@@ -26,14 +26,10 @@ This plugin offers the following features and optimization capabilities:
 ### HOOKS
 The plugin provides the following actions & filters. 
 
-```markdown
-And if you'd like to use syntax highlighting, include the language:
-
 ```php
 if (isAwesome){
   return true
 }
-```
 ```
 
 For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
