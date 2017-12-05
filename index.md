@@ -27,8 +27,15 @@ This plugin offers the following features and optimization capabilities:
 The plugin provides the following actions & filters. 
 
 ```php
-if (isAwesome){
-  return true
+add_filter( 'hdev_optimg_set_conversion', 'yourprefix_filter_mode' );
+if( ! function_exists( 'yourprefix_filter_mode' ) ) {
+  function yourprefix_filter_mode( $convert ) {
+    
+    if( YOUR_CONDITION ) {
+      return true;
+    }
+    return $convert;
+  }
 }
 ```
 
