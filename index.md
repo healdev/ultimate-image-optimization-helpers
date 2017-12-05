@@ -1,4 +1,4 @@
-## Ultimate Image Optimization Helpers
+## Ultimate Image Optimization Helpers for WordPress
 
 This plugin offers the following features and optimization capabilities:
 
