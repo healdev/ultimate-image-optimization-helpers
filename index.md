@@ -23,26 +23,17 @@ This plugin offers the following features and optimization capabilities:
 1. Displays a new "Optimization" status column on the media upload page.
 2. Provides a popover rich info box next to the optimization status for each media.
 
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. 
+### HOOKS
+The plugin provides the following actions & filters. 
 
 ```markdown
-Syntax highlighted code block
+And if you'd like to use syntax highlighting, include the language:
 
-# Header 1
-## Header 2
-### Header 3
-
-
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+```php
+if (isAwesome){
+  return true
+}
+```
 ```
 
 For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
