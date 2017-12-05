@@ -2,19 +2,26 @@
 
 This plugin offers the following features and optimization capabilities:
 
+
 #### Dashboard -> Settings -> Media
+
 1. Displays a list of all image sizes added by the current theme and plugins for your referance.
 
 2. Allows to choose between a variety of easy optimization presets.
 
-2. Allows to enable/disable png to jpeg conversion.
+3. Allows to enable/disable png to jpeg conversion.
 
-3. Provides a completely custom optimization interface for advanced user:
+4. Provides a completely custom optimization interface for advanced users:
 - Adjust the image compression rate.
 - Enhanced quality* feature (applies a light blur/sharpening filter to compensate for the quality loss occuring when WordPress generates intermediate sizes by resizing the original image to unsure the best quality is preserved).
 - Set tmage interlace scheme (pregressive, interlaced or preserve original.)
 - Enable/disable original image optimization (keeps a copy of the original for reference or future processing.)
 - Remove the meta/exif data to reduce image file size (orientation exif data is preserved)
+
+#### Dashboard -> Media
+
+1. Displays a new "Optimization" status column on the media upload page.
+2. Provides a popover rich info box next to the optimization status for each media.
 
 ### Markdown
 
