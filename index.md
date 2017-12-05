@@ -18,7 +18,7 @@ This plugin offers the following features and optimization capabilities:
 
 ### Markdown
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+Markdown is a lightweight and easy-to-use syntax for styling your writing. 
 
 ```markdown
 Syntax highlighted code block
