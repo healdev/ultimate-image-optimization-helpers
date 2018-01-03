@@ -1,3 +1,6 @@
+- ** Release 0.2.5 January 3rd 2018 **
+              - Changed plugin slug & text-domain.
+              
 - ** Release 0.2.3 December 5th 2017 **
               - Fix: filter hdev_optimg_set_conversion wrongly set to hdev_optimg_set_mode in class HDEV_OPTIMG_Optimize.
 
