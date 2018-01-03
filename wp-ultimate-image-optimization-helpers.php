@@ -3,14 +3,18 @@
  * Plugin Name: Ultimate Image Optimization Helpers
  * Plugin URI: https://github.com/healdev/wp-ultimate-image-optimization-helpers
  * Description: This plugin adds extra setting options to the Media setting page to allow optimizing JPEG images by adjusting the compression rate and sharpening resized images to preserve their original quality
- * Version: 0.2.3
+ * Version: 0.2.4
  * Author: Mehdi Salem
  * Author URI: https://healdev.com
+ * GitHub Plugin URI: https://github.com/healdev/wp-ultimate-image-optimization-helpers
+ * Requires at least: 3.8
+ * Tested up to: 4.9
+ *
+ * Text Domain: wp-ultimate-image-optimization-helpers
+ * Domain Path: /languages
+ *
  * License: GPL2
  * License URI:  https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: hdev-l10i-optimg
- * Domain Path: /languages
- * GitHub Plugin URI: https://github.com/healdev/wp-ultimate-image-optimization-helpers
 
 Ultimate Image Optimization Helpers is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -79,7 +83,7 @@ class HDEV_OPTIMG_Core
      * @return void
      */
     public function textdomain() {
-        load_plugin_textdomain( 'hdev-l10i-optimg', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+        load_plugin_textdomain( 'wp-ultimate-image-optimization-helpers', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
     }
 
     /**
