@@ -46,7 +46,7 @@ class HDEV_OPTIMG_Custom_Columns
 
         $media_optimization_column_title = apply_filters( 'hdev_optimg_media_optimization_column_title', 'Optimization' );
 
-        $columns['media-optimization'] = __( $media_optimization_column_title, 'wp-ultimate-image-optimization-helpers' );
+        $columns['media-optimization'] = __( $media_optimization_column_title, 'ultimate-image-optimization-helpers' );
 
         return $columns;
     }

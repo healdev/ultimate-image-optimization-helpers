@@ -54,9 +54,9 @@ class HDEV_OPTIMG_Settings
 
         /** Create our setting sections, hooked into the "media" section. */
         // Display extra image sizes set by plugins & themes
-        add_settings_section( 'hdev_plugin_theme_image_sizes', __( 'Image Sizes Added by Theme/Plugins', 'wp-ultimate-image-optimization-helpers' ), array( $this, 'settings_plugin_theme_image_sizes' ), 'media' );
+        add_settings_section( 'hdev_plugin_theme_image_sizes', __( 'Image Sizes Added by Theme/Plugins', 'ultimate-image-optimization-helpers' ), array( $this, 'settings_plugin_theme_image_sizes' ), 'media' );
         // Optimization settings
-		add_settings_section( 'hdev_optimg', __( 'Image Optimization Settings', 'wp-ultimate-image-optimization-helpers' ), array( $this, 'settings_optimg' ), 'media' );
+		add_settings_section( 'hdev_optimg', __( 'Image Optimization Settings', 'ultimate-image-optimization-helpers' ), array( $this, 'settings_optimg' ), 'media' );
 	}
 
     /**
@@ -73,7 +73,7 @@ class HDEV_OPTIMG_Settings
         echo '<div class="' . esc_attr( $args['id'] ) . '-wrap">';
 
             // Add our intro content.
-            echo '<p>' . esc_html__( 'The sizes listed below determine additional maximum dimensions in pixels added by the current theme and/or plugins to use when adding an image to the Media Library.' , 'wp-ultimate-image-optimization-helpers' ) . '</p>';
+            echo '<p>' . esc_html__( 'The sizes listed below determine additional maximum dimensions in pixels added by the current theme and/or plugins to use when adding an image to the Media Library.' , 'ultimate-image-optimization-helpers' ) . '</p>';
 
             // Now set up the table with each value.
             echo '<table id="' . esc_attr( $args['id'] ) . '" class="hdev-optimg-settings-table form-table">';
@@ -90,7 +90,7 @@ class HDEV_OPTIMG_Settings
                 if( $image_size['crop'] ) {
 
                     $crop_message .= '<br><label style="cursor:auto;" for="hdev-optimg-image-sizes' . $ID_i . '_crop">';
-                    $crop_message .= $image_size['width'] != $image_size['height'] ? esc_html__( 'This image is cropped to exact dimensions.', 'wp-ultimate-image-optimization-helpers' ) : esc_html__( 'This image is cropped to exact dimensions and is proportional.', 'wp-ultimate-image-optimization-helpers' );
+                    $crop_message .= $image_size['width'] != $image_size['height'] ? esc_html__( 'This image is cropped to exact dimensions.', 'ultimate-image-optimization-helpers' ) : esc_html__( 'This image is cropped to exact dimensions and is proportional.', 'ultimate-image-optimization-helpers' );
                     $crop_message .= '</label>';
                 }
 
@@ -99,7 +99,7 @@ class HDEV_OPTIMG_Settings
 
                     // The field label.
                     echo '<th scope="row">';
-                    echo esc_html__( $size_name, 'wp-ultimate-image-optimization-helpers' );
+                    echo esc_html__( $size_name, 'ultimate-image-optimization-helpers' );
                     echo '</th>';
 
                     // The input fields.
@@ -107,7 +107,7 @@ class HDEV_OPTIMG_Settings
 
                         echo '<fieldset>';
 
-                            echo '<legend class="screen-reader-text"><span>' . esc_html__( $size_name, 'wp-ultimate-image-optimization-helpers' ) . '</span></legend>';
+                            echo '<legend class="screen-reader-text"><span>' . esc_html__( $size_name, 'ultimate-image-optimization-helpers' ) . '</span></legend>';
 
                             echo '<label for="hdev-optimg-image-sizes-width">' . esc_html__( 'Max Width&nbsp;' ) . '</label>';
 
@@ -187,13 +187,13 @@ class HDEV_OPTIMG_Settings
 		    // Display error message if PHP Imagick not supported
             if( ! HDEV_OPTIMG_Helper::test_imagick() ) {
 
-                echo '<div style="color:#a00;" class="hdev-admin-box"><p><strong>' . esc_html__( 'Warning! ' , 'wp-ultimate-image-optimization-helpers' ) . '</strong> ' . esc_html__( 'All image optimization features have been deactivated because your PHP environment does not support Imagick or your current version of Imagick does not support all the following methods: (clear, destroy, valid, getimage, writeimage, getimageblob, getimagegeometry, getimageformat, setimageformat, setimagecompression, setimagecompressionquality, setimagepage, setoption, setInterlaceScheme, setImageColorspace, scaleimage, cropimage, cropThumbnailImage, rotateimage, flipimage, flopimage, readimage, sharpenimage, stripImage).' , 'wp-ultimate-image-optimization-helpers' ) . '</p><p>' . esc_html__( 'Please contact your host or server administrator to resolve this issue.' , 'wp-ultimate-image-optimization-helpers' ) . '</p></div>';
+                echo '<div style="color:#a00;" class="hdev-admin-box"><p><strong>' . esc_html__( 'Warning! ' , 'ultimate-image-optimization-helpers' ) . '</strong> ' . esc_html__( 'All image optimization features have been deactivated because your PHP environment does not support Imagick or your current version of Imagick does not support all the following methods: (clear, destroy, valid, getimage, writeimage, getimageblob, getimagegeometry, getimageformat, setimageformat, setimagecompression, setimagecompressionquality, setimagepage, setoption, setInterlaceScheme, setImageColorspace, scaleimage, cropimage, cropThumbnailImage, rotateimage, flipimage, flopimage, readimage, sharpenimage, stripImage).' , 'ultimate-image-optimization-helpers' ) . '</p><p>' . esc_html__( 'Please contact your host or server administrator to resolve this issue.' , 'ultimate-image-optimization-helpers' ) . '</p></div>';
             } else {
 
                 // Add our intro content.
-                echo '<p>' . esc_html__( 'Easily optimize JPEG images for better quality and faster page load.' , 'wp-ultimate-image-optimization-helpers' ) . '</p>';
+                echo '<p>' . esc_html__( 'Easily optimize JPEG images for better quality and faster page load.' , 'ultimate-image-optimization-helpers' ) . '</p>';
 
-                echo '<p style="margin:0;"><strong><u>' . esc_html__( 'Important Note' , 'wp-ultimate-image-optimization-helpers' ) . '</u></strong>: ' . esc_html__( 'New optimization settings will only affect future uploaded images.' , 'wp-ultimate-image-optimization-helpers' ) . '</p><p style="margin:0;">' . esc_html__( 'To apply new optimizations to previously uploaded images, we recommend regenerating them using this plugin: ' , 'wp-ultimate-image-optimization-helpers' ) . ' <a href="https://wordpress.org/plugins/regenerate-thumbnails/" target="_blank">' . esc_html__('Regenerate Thumbnails', 'wp-ultimate-image-optimization-helpers' ) . '</a> ' . esc_html__('by Alex Mills', 'wp-ultimate-image-optimization-helpers' ) . '</p>';
+                echo '<p style="margin:0;"><strong><u>' . esc_html__( 'Important Note' , 'ultimate-image-optimization-helpers' ) . '</u></strong>: ' . esc_html__( 'New optimization settings will only affect future uploaded images.' , 'ultimate-image-optimization-helpers' ) . '</p><p style="margin:0;">' . esc_html__( 'To apply new optimizations to previously uploaded images, we recommend regenerating them using this plugin: ' , 'ultimate-image-optimization-helpers' ) . ' <a href="https://wordpress.org/plugins/regenerate-thumbnails/" target="_blank">' . esc_html__('Regenerate Thumbnails', 'ultimate-image-optimization-helpers' ) . '</a> ' . esc_html__('by Alex Mills', 'ultimate-image-optimization-helpers' ) . '</p>';
 
                 // Now set up the table with each value.
                 echo '<table id="' . esc_attr( $args['id'] ) . '" class="hdev-optimg-settings-table form-table">';
@@ -204,7 +204,7 @@ class HDEV_OPTIMG_Settings
 
                         // The field label.
                         echo '<th scope="row">';
-                            echo esc_html__( 'Mode', 'wp-ultimate-image-optimization-helpers' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'Choose the optimization preset that best match your use case, or go custom if you are an advanced user and know what you\'re doing.', 'wp-ultimate-image-optimization-helpers' ) . '"><span class="icon-help"></span></div>';
+                            echo esc_html__( 'Mode', 'ultimate-image-optimization-helpers' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'Choose the optimization preset that best match your use case, or go custom if you are an advanced user and know what you\'re doing.', 'ultimate-image-optimization-helpers' ) . '"><span class="icon-help"></span></div>';
                         echo '</th>';
 
                         // The input field.
@@ -212,23 +212,23 @@ class HDEV_OPTIMG_Settings
 
                             echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-mode-balanced">';
                             echo '<input type="radio" id="hdev-optimg-mode-balanced" name="hdev_optimg[mode]" value="balanced" ' . checked( $mode, 'balanced', false ) . ' />';
-                            echo esc_html__( 'Balanced (recommended for most websites)', 'wp-ultimate-image-optimization-helpers' ) . '</label>';
+                            echo esc_html__( 'Balanced (recommended for most websites)', 'ultimate-image-optimization-helpers' ) . '</label>';
 
                             echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-mode-hd">';
                             echo '<input type="radio" id="hdev-optimg-mode-hd" name="hdev_optimg[mode]" value="hd" ' . checked( $mode, 'hd', false ) . ' />';
-                            echo '<span style="color:#000;background-color:rgba(0,0,0,.05);">' . 'HD (' . esc_html__( 'high image quality | descent compression', 'wp-ultimate-image-optimization-helpers' ) . ', <u>' . esc_html__( 'highly recommended', 'wp-ultimate-image-optimization-helpers' ) . '</u> - ' . esc_html__( 'for image driven websites)', 'wp-ultimate-image-optimization-helpers' ) . '</span></label>';
+                            echo '<span style="color:#000;background-color:rgba(0,0,0,.05);">' . 'HD (' . esc_html__( 'high image quality | descent compression', 'ultimate-image-optimization-helpers' ) . ', <u>' . esc_html__( 'highly recommended', 'ultimate-image-optimization-helpers' ) . '</u> - ' . esc_html__( 'for image driven websites)', 'ultimate-image-optimization-helpers' ) . '</span></label>';
 
                             echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-mode-performance">';
                             echo '<input type="radio" id="hdev-optimg-mode-performance" name="hdev_optimg[mode]" value="performance" ' . checked( $mode, 'performance', false ) . ' />';
-                            echo esc_html__( 'Performance (higher compression | lower image quality)', 'wp-ultimate-image-optimization-helpers' ) . '</label>';
+                            echo esc_html__( 'Performance (higher compression | lower image quality)', 'ultimate-image-optimization-helpers' ) . '</label>';
 
 	                        echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-mode-advanced">';
                             echo '<input type="radio" id="hdev-optimg-mode-advanced" name="hdev_optimg[mode]" value="advanced" ' . checked( $mode, 'advanced', false ) . ' />';
-                            echo esc_html__( 'Custom', 'wp-ultimate-image-optimization-helpers' ) . ' (' .esc_html__( 'for advanced users', 'wp-ultimate-image-optimization-helpers' ) . ')' . '</label>';
+                            echo esc_html__( 'Custom', 'ultimate-image-optimization-helpers' ) . ' (' .esc_html__( 'for advanced users', 'ultimate-image-optimization-helpers' ) . ')' . '</label>';
 
 				            echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-mode-disabled">';
 				            echo '<input type="radio" id="hdev-optimg-mode-disabled" name="hdev_optimg[mode]" value="disabled" ' . checked( $mode, 'disabled', false ) . ' />';
-				            echo esc_html__( 'Disabled (no optimization)', 'wp-ultimate-image-optimization-helpers' ) . '</label>';
+				            echo esc_html__( 'Disabled (no optimization)', 'ultimate-image-optimization-helpers' ) . '</label>';
 
                         echo '</td>';
 
@@ -240,14 +240,14 @@ class HDEV_OPTIMG_Settings
 
 		                // The field label.
 			            echo '<th scope="row">';
-			                echo esc_html__( 'PNG to JPEG Conversion', 'wp-ultimate-image-optimization-helpers' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'Message here', 'wp-ultimate-image-optimization-helpers' ) . '"><span class="icon-help"></span></div>';
+			                echo esc_html__( 'PNG to JPEG Conversion', 'ultimate-image-optimization-helpers' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'Message here', 'ultimate-image-optimization-helpers' ) . '"><span class="icon-help"></span></div>';
 			            echo '</th>';
 
 			            // The input field.
 			            echo '<td>';
 
 				            echo '<input name="hdev_optimg[convert]" type="checkbox" id="hdev-optimg-convert" value="' . $convert . '" ' . checked( $conversion_checkbox_check, '1', false ) . ' />';
-				            echo '<label for="hdev-optimg-convert"> ' .  esc_html__( 'Convert non-transparent PNG images to JPEG (recommended)', 'wp-ultimate-image-optimization-helpers' ) . '</label>';
+				            echo '<label for="hdev-optimg-convert"> ' .  esc_html__( 'Convert non-transparent PNG images to JPEG (recommended)', 'ultimate-image-optimization-helpers' ) . '</label>';
 
 			            echo '</td>';
 
@@ -259,7 +259,7 @@ class HDEV_OPTIMG_Settings
 
                         // The field label.
                         echo '<th scope="row">';
-                        echo esc_html__( 'Quality', 'wp-ultimate-image-optimization-helpers' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'Lower quality settings reduce file size and improves page load. However,  bear in mind that quality loss starts to become obvious to the eye bellow the recommended value of 77.', 'wp-ultimate-image-optimization-helpers' ) . '"><span class="icon-help"></span></div>';
+                        echo esc_html__( 'Quality', 'ultimate-image-optimization-helpers' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'Lower quality settings reduce file size and improves page load. However,  bear in mind that quality loss starts to become obvious to the eye bellow the recommended value of 77.', 'ultimate-image-optimization-helpers' ) . '"><span class="icon-help"></span></div>';
                         echo '</th>';
 
                         // The input field.
@@ -267,23 +267,23 @@ class HDEV_OPTIMG_Settings
 
                             echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-quality-high">';
                             echo '<input class="hdev-customQualityInput-trigger" type="radio" id="hdev-optimg-quality-high" name="hdev_optimg[quality]" value="high" ' . checked( $quality, 'high', false ) . ' />';
-                            echo esc_html__( 'High', 'wp-ultimate-image-optimization-helpers' ) . ' (' . $mode_preset_settings['balanced']['quality_val'] . ', ' . esc_html__( 'recommended', 'wp-ultimate-image-optimization-helpers' ) . ')' . '</label>';
+                            echo esc_html__( 'High', 'ultimate-image-optimization-helpers' ) . ' (' . $mode_preset_settings['balanced']['quality_val'] . ', ' . esc_html__( 'recommended', 'ultimate-image-optimization-helpers' ) . ')' . '</label>';
 
                             echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-quality-very-high">';
                             echo '<input class="hdev-customQualityInput-trigger" type="radio" id="hdev-optimg-quality-very-high" name="hdev_optimg[quality]" value="very-high" ' . checked( $quality, 'very-high', false ) . ' />';
-                            echo esc_html__( 'Very High', 'wp-ultimate-image-optimization-helpers' ) . ' (' . $mode_preset_settings['hd']['quality_val'] . ', best for photography portfolios)' . '</label>';
+                            echo esc_html__( 'Very High', 'ultimate-image-optimization-helpers' ) . ' (' . $mode_preset_settings['hd']['quality_val'] . ', best for photography portfolios)' . '</label>';
 
                             echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-quality-medium">';
                             echo '<input class="hdev-customQualityInput-trigger" type="radio" id="hdev-optimg-quality-medium" name="hdev_optimg[quality]" value="medium" ' . checked( $quality, 'medium', false ) . ' />';
-                            echo esc_html__( 'Medium', 'wp-ultimate-image-optimization-helpers' ) . ' (' . $mode_preset_settings['performance']['quality_val'] . ', for performance)' . '</label>';
+                            echo esc_html__( 'Medium', 'ultimate-image-optimization-helpers' ) . ' (' . $mode_preset_settings['performance']['quality_val'] . ', for performance)' . '</label>';
 
                             echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-quality-wp-default">';
                             echo '<input class="hdev-customQualityInput-trigger" type="radio" id="hdev-optimg-quality-wp-default" name="hdev_optimg[quality]" value="wp-default" ' . checked( $quality, 'wp-default', false ) . ' />';
-                            echo esc_html__( 'WP Default', 'wp-ultimate-image-optimization-helpers' ) . ' (' . esc_html__( 'not recommended', 'wp-ultimate-image-optimization-helpers' ) . ')' . '</label>';
+                            echo esc_html__( 'WP Default', 'ultimate-image-optimization-helpers' ) . ' (' . esc_html__( 'not recommended', 'ultimate-image-optimization-helpers' ) . ')' . '</label>';
 
                             echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-quality-custom">';
                             echo '<input type="radio" id="hdev-optimg-quality-custom" name="hdev_optimg[quality]" value="custom" ' . checked( $quality, 'custom', false ) . ' />';
-                            echo esc_html__( 'Custom', 'wp-ultimate-image-optimization-helpers' ) . ' ' . esc_html__( 'compression rate', 'wp-ultimate-image-optimization-helpers' );
+                            echo esc_html__( 'Custom', 'ultimate-image-optimization-helpers' ) . ' ' . esc_html__( 'compression rate', 'ultimate-image-optimization-helpers' );
 
                             echo '<input ' . $quality_val_hidden . ' type="number" id="hdev-optimg-quality-custom-val" name="hdev_optimg[quality_val]" value="' . $quality_val . '" step="1" min="0" max="100" class="small-text ' . $quality_val_hidden_class . '" >' . '</label>';
 
@@ -297,14 +297,14 @@ class HDEV_OPTIMG_Settings
 
                         // The field label.
                         echo '<th scope="row">';
-                            echo esc_html__( 'Enhanced quality', 'wp-ultimate-image-optimization-helpers' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'This ImageMagick enhancement applies state of the art blur/sharpen method to compensate for image quality loss caused by resizing. It is highly recommended for all websites &#8212; can be deactivated only by advanced users using filter hdev_optimg_sharpen', 'wp-ultimate-image-optimization-helpers' ) . '"><span class="icon-help"></span></div>';
+                            echo esc_html__( 'Enhanced quality', 'ultimate-image-optimization-helpers' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'This ImageMagick enhancement applies state of the art blur/sharpen method to compensate for image quality loss caused by resizing. It is highly recommended for all websites &#8212; can be deactivated only by advanced users using filter hdev_optimg_sharpen', 'ultimate-image-optimization-helpers' ) . '"><span class="icon-help"></span></div>';
                         echo '</th>';
 
                         // The input field.
                         echo '<td>';
 
                             echo '<input name="hdev_optimg[sharpen]" type="checkbox" id="hdev-optimg-sharpen" value="' . $sharpen . '" ' . checked( $sharpen_checkbox_check, '1', false ) . ' disabled />';
-                            echo '<label for="hdev-optimg-sharpen"> ' .  esc_html__( 'Improve resized images quality (highly recommended & always active)', 'wp-ultimate-image-optimization-helpers' ) . '</label>';
+                            echo '<label for="hdev-optimg-sharpen"> ' .  esc_html__( 'Improve resized images quality (highly recommended & always active)', 'ultimate-image-optimization-helpers' ) . '</label>';
 
                         echo '</td>';
 
@@ -316,7 +316,7 @@ class HDEV_OPTIMG_Settings
 
                         // The field label.
                         echo '<th scope="row">';
-                            echo esc_html__( 'Interlace Scheme', 'wp-ultimate-image-optimization-helpers' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'Making images "progressive" reduces their size a bit and also allows some browsers to start displaying the full image faster. However some studies have shown that visually, most people prefer "deinterlaced" images because of the way they load in full resolution, unfolding from top to bottom&#8212;as opposed to progressive images which are displayed fully but in low resolution first, before they sharpen progressively as the browser finishes loading them...', 'wp-ultimate-image-optimization-helpers' ) . '"><span class="icon-help"></span></div>';
+                            echo esc_html__( 'Interlace Scheme', 'ultimate-image-optimization-helpers' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'Making images "progressive" reduces their size a bit and also allows some browsers to start displaying the full image faster. However some studies have shown that visually, most people prefer "deinterlaced" images because of the way they load in full resolution, unfolding from top to bottom&#8212;as opposed to progressive images which are displayed fully but in low resolution first, before they sharpen progressively as the browser finishes loading them...', 'ultimate-image-optimization-helpers' ) . '"><span class="icon-help"></span></div>';
                         echo '</th>';
 
                         // The input field.
@@ -324,15 +324,15 @@ class HDEV_OPTIMG_Settings
 
                             echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-interlace-origin">';
                             echo '<input type="radio" id="hdev-optimg-interlace-origin" name="hdev_optimg[interlace]" value="origin" ' . checked( $interlace, 'origin', false ) . ' />';
-                            echo esc_html__( 'Preserve original', 'wp-ultimate-image-optimization-helpers' ) . '</label>';
+                            echo esc_html__( 'Preserve original', 'ultimate-image-optimization-helpers' ) . '</label>';
 
                             echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-interlace-progressive">';
                             echo '<input type="radio" id="hdev-optimg-interlace-progressive" name="hdev_optimg[interlace]" value="progressive" ' . checked( $interlace, 'progressive', false ) . ' />';
-                            echo esc_html__( 'Progressive', 'wp-ultimate-image-optimization-helpers' ) . '</label>';
+                            echo esc_html__( 'Progressive', 'ultimate-image-optimization-helpers' ) . '</label>';
 
                             echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-interlace-deinterlace">';
                             echo '<input type="radio" id="hdev-optimg-interlace-deinterlace" name="hdev_optimg[interlace]" value="deinterlace" ' . checked( $interlace, 'deinterlace', false ) . ' />';
-                            echo esc_html__( 'Deinterlaced', 'wp-ultimate-image-optimization-helpers' ) . '</label>';
+                            echo esc_html__( 'Deinterlaced', 'ultimate-image-optimization-helpers' ) . '</label>';
 
                         echo '</td>';
 
@@ -344,7 +344,7 @@ class HDEV_OPTIMG_Settings
 
                         // The field label.
                         echo '<th scope="row">';
-                            echo esc_html__( 'Optimize Original?', 'wp-ultimate-image-optimization-helpers' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'Choose if you want to also apply the above quality/compression settings to the original image.&#xa;Highly recommended &#8212; unless you\'re sure you\'ll be uploading only images that have already been fully optimized by other means...&#xa;And no worries, the non-optimized original version will be backed-up for reference and future processing.', 'wp-ultimate-image-optimization-helpers' ) . '"><span class="icon-help"></span></div>';
+                            echo esc_html__( 'Optimize Original?', 'ultimate-image-optimization-helpers' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'Choose if you want to also apply the above quality/compression settings to the original image.&#xa;Highly recommended &#8212; unless you\'re sure you\'ll be uploading only images that have already been fully optimized by other means...&#xa;And no worries, the non-optimized original version will be backed-up for reference and future processing.', 'ultimate-image-optimization-helpers' ) . '"><span class="icon-help"></span></div>';
                         echo '</th>';
 
                         // The input field.
@@ -352,11 +352,11 @@ class HDEV_OPTIMG_Settings
 
                             echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-compress-original-true">';
                             echo '<input type="radio" id="hdev-optimg-compress-original-true" name="hdev_optimg[optimize_original]" value="true" ' . checked( $optimize_original, 'true', false ) . ' />';
-                            echo esc_html__( 'Yes (highly recommended)', 'wp-ultimate-image-optimization-helpers' ) . '</label>';
+                            echo esc_html__( 'Yes (highly recommended)', 'ultimate-image-optimization-helpers' ) . '</label>';
 
                             echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-compress-original-false">';
                             echo '<input type="radio" id="hdev-optimg-compress-original-false" name="hdev_optimg[optimize_original]" value="false" ' . checked( $optimize_original, 'false', false ) . ' />';
-                            echo esc_html__( 'No', 'wp-ultimate-image-optimization-helpers' ) . '</label>';
+                            echo esc_html__( 'No', 'ultimate-image-optimization-helpers' ) . '</label>';
 
                         echo '</td>';
 
@@ -368,7 +368,7 @@ class HDEV_OPTIMG_Settings
 
                         // The field label.
                         echo '<th scope="row">';
-                            echo esc_html__( 'Remove metadata?', 'wp-ultimate-image-optimization-helpers' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'Removing the meta/exif data reduces the images\' file size.', 'wp-ultimate-image-optimization-helpers' ) . '"><span class="icon-help"></span></div>';
+                            echo esc_html__( 'Remove metadata?', 'ultimate-image-optimization-helpers' ) . '<div class="hdev-tooltip dashicons dashicons-editor-help" data-hdev-tooltip="' . esc_html__( 'Removing the meta/exif data reduces the images\' file size.', 'ultimate-image-optimization-helpers' ) . '"><span class="icon-help"></span></div>';
                         echo '</th>';
 
                         // The input field.
@@ -376,15 +376,15 @@ class HDEV_OPTIMG_Settings
 
                             echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-metadata-true">';
                             echo '<input type="radio" id="hdev-optimg-metadata-true" name="hdev_optimg[remove_metadata]" value="true" ' . checked( $remove_metadata, 'true', false ) . ' />';
-                            echo esc_html__( 'Yes (recommended)', 'wp-ultimate-image-optimization-helpers' ) . '</label>';
+                            echo esc_html__( 'Yes (recommended)', 'ultimate-image-optimization-helpers' ) . '</label>';
 
                             /*echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-metadata-resized">';
                             echo '<input type="radio" id="hdev-optimg-metadata-resized" name="hdev_optimg[remove_metadata]" value="resized" ' . checked( $remove_metadata, 'no', false ) . ' />';
-                            echo esc_html__( 'Resized images only', 'wp-ultimate-image-optimization-helpers' ) . '</label>';*/
+                            echo esc_html__( 'Resized images only', 'ultimate-image-optimization-helpers' ) . '</label>';*/
 
                             echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-metadata-false">';
                             echo '<input type="radio" id="hdev-optimg-metadata-false" name="hdev_optimg[remove_metadata]" value="false" ' . checked( $remove_metadata, 'false', false ) . ' />';
-                            echo esc_html__( 'No, preserve my original meta/exif data', 'wp-ultimate-image-optimization-helpers' ) . '</label>';
+                            echo esc_html__( 'No, preserve my original meta/exif data', 'ultimate-image-optimization-helpers' ) . '</label>';
 
                         echo '</td>';
 
