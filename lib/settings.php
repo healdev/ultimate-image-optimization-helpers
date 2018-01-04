@@ -414,7 +414,7 @@ class HDEV_OPTIMG_Settings
 	    // Populated our input
 		if( empty( $input ) ) {
             $input = $_POST['hdev_optimg'];
-        }update_user_meta(1,'hdev-hey',$input['convert']);
+        }
 
         // Make sure we have an array.
         $input  = (array) $input;

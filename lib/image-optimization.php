@@ -812,10 +812,6 @@ class HDEV_OPTIMG_Optimize
 			// Get rid of the root Imagick object in memory
 			if( isset( $this->root_imagick_object ) && $this->root_imagick_object->clear() !== true ) $this->root_imagick_object->destroy();
 			$this->root_imagick_object = null;
-
-			if( empty( $this->root_imagick_object ) ) {
-				update_user_meta(1,'hdev-convert-check-root', $file);
-			}
 		}
 
 		return $file;

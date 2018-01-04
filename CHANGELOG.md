@@ -1,3 +1,6 @@
+- ** Release 0.2.6 January 4th 2018 **
+              - Fix: removed unsafe & unnecessary testing code.
+
 - ** Release 0.2.5 January 3rd 2018 **
               - Changed plugin slug & text-domain.
               

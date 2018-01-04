@@ -3,7 +3,7 @@
  * Plugin Name: Ultimate Image Optimization Helpers
  * Plugin URI: https://github.com/healdev/ultimate-image-optimization-helpers
  * Description: This plugin adds extra setting options to the Media setting page to allow optimizing JPEG images by adjusting the compression rate and sharpening resized images to preserve their original quality
- * Version: 0.2.5
+ * Version: 0.2.6
  * Author: Mehdi Salem
  * Author URI: https://healdev.com
  * GitHub Plugin URI: https://github.com/healdev/ultimate-image-optimization-helpers
