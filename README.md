@@ -1,5 +1,12 @@
 # Ultimate Image Optimization Helpers
-This plugin offers the following features and optimization capabilities under Dashboard->Settings->Media:
+
+Tired of loosing image quality every time WordPress generates alternative image sizes? How about all these image optimization plugins that do a great job at compressing but nothing about the quality loss?
+
+Ultimate Image Optimization Helpers is probably the solution for your to get the best performance while maintaining image quality!
+
+# Features
+Dashboard->Settings->Media
+
 - Adjusting the image compression rate.
 - Applying a light blur/sharpening filter to compensate for the quality loss occuring when WordPress resizes images.
 - Setting the image interlace scheme (pregressive, interlaced or preserve original.)
