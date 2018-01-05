@@ -2,7 +2,7 @@
 
 Tired of loosing image quality every time WordPress generates alternative image sizes? How about all these image optimization plugins that do a great job at compressing but nothing about the quality loss?
 
-Ultimate Image Optimization Helpers is probably the solution for your to get the best performance while maintaining image quality!
+Ultimate Image Optimization Helpers is the solution and will get you the best performance while maintaining image quality!
 
 # Features
 Dashboard->Settings->Media

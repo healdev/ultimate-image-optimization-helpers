@@ -1,3 +1,6 @@
+- ** Release 0.2.7 January 5th 2018 **
+              - Updated README.md file.
+
 - ** Release 0.2.6 January 4th 2018 **
               - Fix: removed unsafe & unnecessary testing code.
 
