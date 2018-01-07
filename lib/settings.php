@@ -63,8 +63,16 @@ class HDEV_OPTIMG_Settings
 		add_settings_section( 'hdev_optimg', __( 'Image Optimization Settings', 'ultimate-image-optimization-helpers' ), array( $this, 'settings_optimg' ), 'media' );
 	}
 
+	/**
+	 * Generate the plugin settings link to be added on the plugin.php admin page
+	 *
+	 * @param $links
+	 *
+	 * @return array
+	 */
 	public function plugin_action_links( $links ) {
-		$links[] = '<a href="'. esc_url( get_admin_url(null, 'options-media.php#hdev_optimg-wrap') ) .'" title="Dashboard -> Settings -> Media">Settings</a>';
+
+		$links[] = '<a href="'. esc_url( get_admin_url(null, 'options-media.php#' . 'hdev_optimg-settings-anchor') ) .'" title="Dashboard -> Settings -> Media">Settings</a>';
 
 		return $links;
 	}
@@ -92,6 +100,9 @@ class HDEV_OPTIMG_Settings
 
             // Init ID count
             $ID_i = 1;
+            // Get array size
+            $array_size = sizeof( $image_sizes );
+
             foreach( $image_sizes as $size_name => $image_size ) {
 
                 // Init cropped image message
@@ -105,7 +116,7 @@ class HDEV_OPTIMG_Settings
                 }
 
                 // Our additional image sizes field.
-                echo '<tr>';
+                echo $array_size == $ID_i ?  '<tr id="' . 'hdev_optimg-settings-anchor">' : '<tr>';
 
                     // The field label.
                     echo '<th scope="row">';
@@ -139,8 +150,8 @@ class HDEV_OPTIMG_Settings
                 $ID_i++;
             }
 
-                // Call our action to include any extra settings.
-                do_action( 'hdev_optimg_settings_plugin_theme_image_sizes_page', $args );
+            // Call our action to include any extra settings.
+            do_action( 'hdev_optimg_settings_plugin_theme_image_sizes_page', $args );
 
             // Close the table.
             echo '</tbody>';
@@ -192,7 +203,7 @@ class HDEV_OPTIMG_Settings
 		//$editor = HDEV_OPTIMG_Helper::get_wp_editor_args( 'hdev_optimg[text]' );
 
 		// Add a div to wrap our whole thing for clean.
-		echo '<div id="' . esc_attr( $args['id'] ) . '-wrap" class="' . esc_attr( $args['id'] ) . '-wrap">';
+		echo '<div class="' . esc_attr( $args['id'] ) . '-wrap">';
 
 		    // Display error message if PHP Imagick not supported
             if( ! HDEV_OPTIMG_Helper::test_imagick() ) {
