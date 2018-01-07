@@ -1,3 +1,6 @@
+- ** Release 0.2.8 January 6th 2018 **
+              - Fix: PHP notice.
+              
 - ** Release 0.2.7 January 5th 2018 **
               - Updated README file.
 
