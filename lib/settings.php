@@ -39,7 +39,11 @@ class HDEV_OPTIMG_Settings
 			update_option( 'hdev_optimg', $this->default_settings );
 		}
 
+		// Load our settings
 		add_action( 'admin_init',                   array( $this, 'load_settings'       )           );
+
+		// Add link to plugin settings page on the plugin.php page
+		add_filter( 'plugin_action_links_' . HDEV_OPTIMG_BASE, array( $this, 'plugin_action_links' ) );
 	}
 
 	/**
@@ -57,6 +61,12 @@ class HDEV_OPTIMG_Settings
         add_settings_section( 'hdev_plugin_theme_image_sizes', __( 'Image Sizes Added by Theme/Plugins', 'ultimate-image-optimization-helpers' ), array( $this, 'settings_plugin_theme_image_sizes' ), 'media' );
         // Optimization settings
 		add_settings_section( 'hdev_optimg', __( 'Image Optimization Settings', 'ultimate-image-optimization-helpers' ), array( $this, 'settings_optimg' ), 'media' );
+	}
+
+	public function plugin_action_links( $links ) {
+		$links[] = '<a href="'. esc_url( get_admin_url(null, 'options-media.php#hdev_optimg-wrap') ) .'" title="Dashboard -> Settings -> Media">Settings</a>';
+
+		return $links;
 	}
 
     /**
@@ -182,7 +192,7 @@ class HDEV_OPTIMG_Settings
 		//$editor = HDEV_OPTIMG_Helper::get_wp_editor_args( 'hdev_optimg[text]' );
 
 		// Add a div to wrap our whole thing for clean.
-		echo '<div class="' . esc_attr( $args['id'] ) . '-wrap">';
+		echo '<div id="' . esc_attr( $args['id'] ) . '-wrap" class="' . esc_attr( $args['id'] ) . '-wrap">';
 
 		    // Display error message if PHP Imagick not supported
             if( ! HDEV_OPTIMG_Helper::test_imagick() ) {
