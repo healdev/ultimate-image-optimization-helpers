@@ -1,3 +1,6 @@
+- ** Release 0.2.9 January 7th 2018 **
+              - Added feature: constrain original image dimension so the full size is never bigger than Max Retina resolution x2 : Max Width = 5012 & Max Height = 2880.
+              
 - ** Release 0.2.8 January 6th 2018 **
               - Fix: PHP notice.
               

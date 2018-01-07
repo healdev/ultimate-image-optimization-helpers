@@ -48,6 +48,9 @@ To apply any new optimizations to previously uploaded images, you can regenerate
 3. Dashboard -> Media -> Optimization info column.
 
 == Changelog ==
+= 0.2.9 =
+* Added feature: constrain original image dimension so the full size is never bigger than Max Retina resolution x2 : Max Width = 5012 & Max Height = 2880.
+
 = 0.2.8 =
 * Fix: PHP notice.
 
