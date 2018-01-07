@@ -4,7 +4,7 @@ Tags: image, optimize, compress, optimise, resize, jpeg, sharpen, imagick
 Donate link: https://healdev.com/donate
 Requires at least: 3.8
 Tested up to: 4.9.1
-Requires PHP: 5.6
+Requires PHP: 7.0
 Stable tag: trunk
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -12,13 +12,14 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Optimize your images the right way—Maintain the quality of your resized images.
 
 == Description ==
-Tired of loosing image quality every time WordPress generates alternative image sizes? How about all these image optimization plugins that do a great job at compressing but nothing about the quality loss?
-
 Ultimate Image Optimization Helpers plugin is the most flexible and efficient solution available to preserve image quality while increasing performance and the loading time of your images!
+
+Use this plugin if you're tired of loosing image quality every time WordPress generates alternative image sizes and disappointed in all these image optimization plugins that do a great job at compressing but nothing about the quality loss...
 
 = Features =
 
 *Dashboard -> Settings -> Media*
+
 * Adjust the image compression rate.
 * Apply a light blur/sharpening filter to compensate for the quality loss occurring when WordPress resizes images.
 * Set the image interlace scheme (progressive|interlaced|preserve original)
@@ -27,6 +28,7 @@ Ultimate Image Optimization Helpers plugin is the most flexible and efficient so
 * List of all image sizes added by the current theme and plugins.
 
 *Dashboard -> Media*
+
 * Adds a new "Optimization" column to the media upload page
 * Provides information about the image sizes and optimization applied
 
@@ -37,15 +39,18 @@ Ultimate Image Optimization Helpers plugin is the most flexible and efficient so
 4. Start uploading/optimizing new images!
 
 == Frequently Asked Questions ==
-= how to apply new optimization settings to previously u[loaded images? =
-To apply any new optimizations to previously uploaded images, you can regenerate thumbnails  using this plugin: https://wordpress.org/plugins/regenerate-thumbnails by Alex Mills
+= How to apply new optimization settings to previously uploaded images? =
+To apply any new optimizations to previously uploaded images, you can regenerate thumbnails  using this plugin: <a href="https://wordpress.org/plugins/regenerate-thumbnails">Regenerate Thumbnails</a> by Alex Mills
 
 == Screenshots ==
-1. The screenshot description corresponds to screenshot-1.(png|jpg|jpeg|gif).
-2. The screenshot description corresponds to screenshot-2.(png|jpg|jpeg|gif).
-3. The screenshot description corresponds to screenshot-3.(png|jpg|jpeg|gif).
+1. Dashboard -> Settings -> Media.
+2. Dashboard -> Settings -> Media -> Mode Custom.
+3. Dashboard -> Media -> Optimization info column.
 
 == Changelog ==
+= 0.2.8 =
+* Fix: PHP notice.
+
 = 0.2.7 =
 * Updated README file.
 

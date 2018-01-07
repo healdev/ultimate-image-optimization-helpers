@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Ultimate Image Optimization Helpers
  * Plugin URI: https://github.com/healdev/ultimate-image-optimization-helpers
- * Description: This plugin adds extra setting options to the Media setting page to allow optimizing JPEG images by adjusting the compression rate and sharpening resized images to preserve their original quality
+ * Description: This plugin adds extra setting options to the Media setting page to allow optimizing JPEG images by adjusting the compression rate and sharpening resized images to preserve their original quality.
  * Version: 0.2.8
  * Author: Mehdi Salem
  * Author URI: https://healdev.com
@@ -50,12 +50,12 @@ if ( ! defined( 'HDEV_OPTIMG_WP_MIN_VER' ) ) {
 
 // Set our defined base.
 if ( ! defined( 'HDEV_OPTIMG_BASE ' ) ) {
-    define( 'HDEV_OPTIMG_BASE', plugin_basename( __FILE__ ) );
+	define( 'HDEV_OPTIMG_BASE', plugin_basename( __FILE__ ) );
 }
 
 // Set our defined directory.
 if ( ! defined( 'HDEV_OPTIMG_DIR' ) ) {
-    define( 'HDEV_OPTIMG_DIR', plugin_dir_path( __FILE__ ) );
+	define( 'HDEV_OPTIMG_DIR', plugin_dir_path( __FILE__ ) );
 }
 
 // Define all our other constants
@@ -67,46 +67,46 @@ require_once( HDEV_OPTIMG_DIR . 'lib/constants.php' );
 class HDEV_OPTIMG_Core
 {
 
-    /**
-     * Load our hooks and filters.
-     *
-     * @return void
-     */
-    public function init() {
-        add_action( 'plugins_loaded',               array( $this, 'textdomain'          )           );
-        add_action( 'plugins_loaded',               array( $this, 'load_files'          )           );
-    }
+	/**
+	 * Load our hooks and filters.
+	 *
+	 * @return void
+	 */
+	public function init() {
+		add_action( 'plugins_loaded',               array( $this, 'textdomain'          )           );
+		add_action( 'plugins_loaded',               array( $this, 'load_files'          )           );
+	}
 
-    /**
-     * Load textdomain for international goodness.
-     *
-     * @return void
-     */
-    public function textdomain() {
-        load_plugin_textdomain( 'ultimate-image-optimization-helpers', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
-    }
+	/**
+	 * Load textdomain for international goodness.
+	 *
+	 * @return void
+	 */
+	public function textdomain() {
+		load_plugin_textdomain( 'ultimate-image-optimization-helpers', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+	}
 
-    /**
-     * Call our files in the appropriate place.
-     *
-     * @return void
-     */
-    public function load_files() {
+	/**
+	 * Call our files in the appropriate place.
+	 *
+	 * @return void
+	 */
+	public function load_files() {
 
-        // Load our back end.
-        if ( is_admin() ) {
-            // Load our helper file first.
-            require_once( HDEV_OPTIMG_DIR . 'lib/helper.php' );
+		// Load our back end.
+		if ( is_admin() ) {
+			// Load our helper file first.
+			require_once( HDEV_OPTIMG_DIR . 'lib/helper.php' );
 
-            // Load the plugin functionalities
-            require_once( HDEV_OPTIMG_DIR . 'lib/admin.php' );
-            require_once( HDEV_OPTIMG_DIR . 'lib/settings.php' );
-            require_once( HDEV_OPTIMG_DIR . 'lib/custom-columns.php' );
-            require_once( HDEV_OPTIMG_DIR . 'lib/image-optimization.php' );
-        }
-    }
+			// Load the plugin functionalities
+			require_once( HDEV_OPTIMG_DIR . 'lib/admin.php' );
+			require_once( HDEV_OPTIMG_DIR . 'lib/settings.php' );
+			require_once( HDEV_OPTIMG_DIR . 'lib/custom-columns.php' );
+			require_once( HDEV_OPTIMG_DIR . 'lib/image-optimization.php' );
+		}
+	}
 
-    // End the class.
+	// End the class.
 }
 
 // Instantiate our class.
