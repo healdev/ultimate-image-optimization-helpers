@@ -305,6 +305,14 @@ class HDEV_OPTIMG_Optimize
 
 				// Increment success rate
 				$_hdev_optimg_rate++;
+
+				// Update metadata if original image was resized down
+				if( (int) $metadata['width'] > (int) $original_image_optimized['width'] ) {
+					$metadata['width'] = $original_image_optimized['width'];
+				}
+				if( (int) $metadata['height'] > (int) $original_image_optimized['height'] ) {
+					$metadata['height'] = $original_image_optimized['height'];
+				}
 			}
 		}
 
@@ -478,8 +486,10 @@ class HDEV_OPTIMG_Optimize
 				$imagick_object->setInterlaceScheme( $interlace_scheme );
 			}
 
+			// Init resize image condition
+			$resize_image = ! empty( $image_data['width'] ) || ! empty( $image_data['height'] );
+
 			// Resize image when necessary and only if mime type is jpeg
-			$resize_image = ( ! empty( $image_data['width'] ) || ! empty( $image_data['height'] ) );
 			if( $resize_image && $image_data['crop'] && $image_data['mime_type'] == 'image/jpeg' ) {
 
 				// Resize/crop new image
@@ -503,7 +513,7 @@ class HDEV_OPTIMG_Optimize
 				$imagick_object->setOption( 'png:format', 'png8' );
 			}
 
-			// Sharpen image slightly after resizing and compressing to recover quality (only if it was resized)
+			// Blur/Sharpen image slightly after resizing and compressing to recover quality (only if it was resized)
 			if( $resize_image && $optimization_params['sharpen'] ) {
 
 				// Blur image slightly always before sharpening.
@@ -595,6 +605,8 @@ class HDEV_OPTIMG_Optimize
 			'crop' => $resize_image && $image_data['crop'],
 			'blur_sharpen' => $resize_image && $optimization_params['sharpen'],
 			'compression' => $optimization_params['quality'],
+			'width' => $imagick_object->getImageWidth(),
+			'height' => $imagick_object->getImageHeight()
 		);
 	}
 
@@ -733,20 +745,23 @@ class HDEV_OPTIMG_Optimize
 
 		$size_params = array( 0, 0 );
 
+		// Make sure the original image size <= max retina size
 		if( $image_ratio <= 1 ) {
 
 			$size_params[0] = 0;
 
-			// Make sure the image original size is preserved if smaller than max retina
-			if( $image_dimension[1] < HDEV_OPTIMG_MAX_RETINA_HEIGHT ) {
-				$size_params[1] = $image_dimension[1];
+			// Constrain to default max height
+			if( $image_dimension[1] > HDEV_OPTIMG_MAX_RETINA_HEIGHT ) {
+				$size_params[1] = HDEV_OPTIMG_MAX_RETINA_HEIGHT;
 			}
 		} else {
 
 			$size_params[1] = 0;
 
-			// Make sure the image original size is preserved if smaller than max retina
-			if( $image_dimension[0] < HDEV_OPTIMG_MAX_RETINA_WIDTH ) $size_params[0] = $image_dimension[0];
+			// Constrain to default max width
+			if( $image_dimension[0] > HDEV_OPTIMG_MAX_RETINA_WIDTH ) {
+				$size_params[0] = HDEV_OPTIMG_MAX_RETINA_WIDTH;
+			}
 		}
 
 		return $size_params;
