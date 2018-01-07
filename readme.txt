@@ -26,6 +26,7 @@ Use this plugin if you're tired of loosing image quality every time WordPress ge
 * Optimize of the original images.
 * Remove the meta/exif data to reduce image file size (orientation exif data is preserved)
 * List of all image sizes added by the current theme and plugins.
+* Convert non-transparent PNG images to JPEG.
 
 *Dashboard -> Media*
 
