@@ -731,7 +731,7 @@ class HDEV_OPTIMG_Optimize
 	 */
 	public function get_adjusted_size_params( $image_ratio, $image_dimension ) {
 
-		$size_params = array();
+		$size_params = array( 0, 0 );
 
 		if( $image_ratio <= 1 ) {
 
