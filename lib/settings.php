@@ -237,7 +237,7 @@ class HDEV_OPTIMG_Settings
 
                             echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-mode-hd">';
                             echo '<input type="radio" id="hdev-optimg-mode-hd" name="hdev_optimg[mode]" value="hd" ' . checked( $mode, 'hd', false ) . ' />';
-                            echo '<span style="color:#000;background-color:rgba(0,0,0,.05);">' . 'HD (' . esc_html__( 'high image quality | descent compression', 'ultimate-image-optimization-helpers' ) . ', <u>' . esc_html__( 'highly recommended', 'ultimate-image-optimization-helpers' ) . '</u> - ' . esc_html__( 'for image driven websites)', 'ultimate-image-optimization-helpers' ) . '</span></label>';
+                            echo '<span style="color:#000;background-color:rgba(0,0,0,.05);">' . 'HD (' . esc_html__( 'high image quality | decent compression', 'ultimate-image-optimization-helpers' ) . ', <u>' . esc_html__( 'highly recommended', 'ultimate-image-optimization-helpers' ) . '</u> - ' . esc_html__( 'for image driven websites)', 'ultimate-image-optimization-helpers' ) . '</span></label>';
 
                             echo '<label class="hdev-label-radio-stacked" for="hdev-optimg-mode-performance">';
                             echo '<input type="radio" id="hdev-optimg-mode-performance" name="hdev_optimg[mode]" value="performance" ' . checked( $mode, 'performance', false ) . ' />';
