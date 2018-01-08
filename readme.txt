@@ -16,7 +16,7 @@ The most integrated, flexible and efficient solution available to reduce image f
 
 Use this plugin if you're tired of loosing image quality every time WordPress generates alternative image sizes and disappointed in all these image optimization plugins that do a great job at compressing but nothing about the quality loss...
 
-**REQUIRES PHP 5.6 OR GREATER AND Imagick 2.2.0 OR GREATER**
+**REQUIRES: PHP 5.6 OR GREATER + Imagick 2.2.0 OR GREATER**
 
 = Features =
 
