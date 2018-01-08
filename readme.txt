@@ -9,7 +9,7 @@ Stable tag: trunk
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Optimize your images the right way—Maintain the quality of your resized images.
+Optimize your images the right way—maintain the quality of your resized images.
 
 == Description ==
 The most integrated, flexible and efficient solution available to reduce image file sizes and improve SEO & performance while preserving/improving image quality.
@@ -34,6 +34,11 @@ The most integrated, flexible and efficient solution available to reduce image f
 
 * Adds a new "Optimization" column to the media upload page
 * Provides information about the image sizes and optimization applied
+
+*LET ME KNOW YOUR IMPROVEMENT SUGGESTIONS, TOGETHER, HOW WE CAN MAKE THIS PLUGIN BETTER!*
+
+= Developers =
+You'll love this plugin for its advanced configuration options, hooks, seamless integration, performance and smart blur & sharpen feature!
 
 == Installation ==
 1. Upload \"test-plugin.php\" to the \"/wp-content/plugins/\" directory.
