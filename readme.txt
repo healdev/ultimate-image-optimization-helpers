@@ -4,7 +4,7 @@ Tags: image, optimize, compress, optimise, resize, jpeg, sharpen, imagick
 Donate link: https://healdev.com/donate
 Requires at least: 3.8
 Tested up to: 4.9.1
-Requires PHP: 7.0
+Requires PHP: 5.6
 Stable tag: trunk
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -12,9 +12,12 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Optimize your images the right way—Maintain the quality of your resized images.
 
 == Description ==
-Ultimate Image Optimization Helpers plugin is the most flexible and efficient solution available to preserve image quality while increasing performance and the loading time of your images!
+The most integrated, flexible and efficient solution available to reduce image file sizes and improve SEO & performance while preserving/improving image quality.
 
 Use this plugin if you're tired of loosing image quality every time WordPress generates alternative image sizes and disappointed in all these image optimization plugins that do a great job at compressing but nothing about the quality loss...
+
+= Important note: =
+**THIS PLUGIN REQUIRES A MINIMUM PHP VERSION OF 5.6 COMPILED AGAINST Imagick 2.2.0 OR GREATER**
 
 = Features =
 
