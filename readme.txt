@@ -1,6 +1,6 @@
 === Ultimate Image Optimization Helpers ===
 Contributors: healdev
-Tags: image, optimize, compress, optimise, resize, jpeg, sharpen, imagick
+Tags: image, optimize, compress, optimise, image optimizer, performance, seo, resize, jpeg, sharpen, Imagick, ImageMagick, lossless, sharpen, sharpening, tool, helper
 Donate link: https://healdev.com/donate
 Requires at least: 3.8
 Tested up to: 4.9.1
