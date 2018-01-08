@@ -14,7 +14,7 @@ Optimize your images the right way—Maintain the quality of your resized images
 == Description ==
 The most integrated, flexible and efficient solution available to reduce image file sizes and improve SEO & performance while preserving/improving image quality.
 
-Use this plugin if you're tired of loosing image quality every time WordPress generates alternative image sizes and disappointed in all these image optimization plugins that do a great job at compressing but nothing about the quality loss...
+*Use this plugin if you're tired of loosing image quality every time WordPress generates alternative image sizes and disappointed in all these image optimization plugins that do a great job at compressing but nothing about the quality loss...*
 
 **REQUIRES -> PHP 5.6 OR GREATER + Imagick 2.2.0 OR GREATER**
 
