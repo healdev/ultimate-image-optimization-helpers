@@ -76,17 +76,6 @@ class HDEV_OPTIMG_Optimize
 
 		// Handle image conversion
 		add_filter( 'wp_handle_upload_prefilter',         array( $this, 'convert_image_to_jpeg'   ), 9999     );
-
-		// Resize image with preserved aspect ration to optimize website bandwidth consumption
-		/*add_filter( 'hdev_optimize_original_img_size_params', function( $size_params ) {
-			if( intval( $size_params[0] ) <= MAX_SUPPORTED_RETINA_WIDTH && intval( $size_params[1] ) <= MAX_SUPPORTED_RETINA_WIDTH )
-			{
-				return $size_params;
-			}
-
-			return array( MAX_SUPPORTED_RETINA_WIDTH, MAX_SUPPORTED_RETINA_HEIGHT ); // original will be used as x-retina size
-		});*/
-
 	}
 
 	/**
