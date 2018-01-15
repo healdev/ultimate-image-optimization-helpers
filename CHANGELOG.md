@@ -1,3 +1,6 @@
+- ** Release 0.2.10 January 14th 2018 **
+              - Fix: Setting the quality to "WP Default" not working and deactivates completely compression.
+              
 - ** Release 0.2.9 January 7th 2018 **
               - Added feature: constrain original image dimension so the full size is never bigger than Max Retina resolution x2: Max Width = 5012 & Max Height = 2880.
               

@@ -66,8 +66,12 @@ class HDEV_OPTIMG_Optimize
 
 		// Make sure WordPress does not compress files on scale/crop...etc so our compression does not add up quality loss
 		if( $this->imagick_optimization_active ) {
-			add_filter( 'wp_editor_set_quality', function( $quality ) { // VERY IMPORTANT FOR AJAX SCALE/CROP ACTIONS
-				return 100;
+			add_filter( 'wp_editor_set_quality', function( $quality ) {
+
+				// Store WP filtered compression rate
+				$GLOBALS['optimg_wp_filtered_quality'] = $quality;
+
+				return 100; // VERY IMPORTANT FOR AJAX SCALE/CROP ACTIONS
 			}, 9999 );
 		}
 
@@ -416,7 +420,6 @@ class HDEV_OPTIMG_Optimize
 			$_hdev_optimg_log['interlace'] = $interlace;
 			$_hdev_optimg_log['blur_sharpen'] = $sharpen;
 			$_hdev_optimg_log['compression'] = $quality;
-			$_hdev_optimg_log['compression'] = $quality;
 		}
 
 		// Store orientation metadata
@@ -711,8 +714,9 @@ class HDEV_OPTIMG_Optimize
 						'quality_val' )
 				);
 			case 'wp-default' :
-				return apply_filters( 'wp_editor_set_quality',
-					apply_filters( 'hdev_optimg_set_quality',
+				return isset( $GLOBALS['optimg_wp_filtered_quality'] ) ?
+					$GLOBALS['optimg_wp_filtered_quality'] :
+					apply_filters( 'wp_editor_set_quality', apply_filters( 'hdev_optimg_set_quality',
 						(int) HDEV_OPTIMG_Helper::get_optimization_quality_presets( $quality )
 					));
 			default :

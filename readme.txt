@@ -56,6 +56,9 @@ To apply any new optimizations to previously uploaded images, you can regenerate
 3. Dashboard -> Media -> Optimization info column.
 
 == Changelog ==
+= 0.2.10 =
+* Fix: Setting the quality to "WP Default" not working and deactivates completely compression.
+
 = 0.2.9 =
 * Added feature: constrain original image dimension so the full size is never bigger than Max Retina resolution x2: Max Width = 5012 & Max Height = 2880.
 

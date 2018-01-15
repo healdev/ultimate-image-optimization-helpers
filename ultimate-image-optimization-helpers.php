@@ -3,7 +3,7 @@
  * Plugin Name: Ultimate Image Optimization Helpers
  * Plugin URI: https://github.com/healdev/ultimate-image-optimization-helpers
  * Description: Optimize images and compress file sizes to improve SEO & performance while preserving/improving image quality.
- * Version: 0.2.9
+ * Version: 0.2.10
  * Author: Mehdi Salem
  * Author URI: https://healdev.com
  * GitHub Plugin URI: https://github.com/healdev/ultimate-image-optimization-helpers
