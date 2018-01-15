@@ -35,7 +35,7 @@ The most integrated, flexible and efficient solution available to reduce image f
 * Adds a new "Optimization" column to the media upload page
 * Provides information about the image sizes and optimization applied
 
-*LET ME KNOW YOUR IMPROVEMENT SUGGESTIONS, TOGETHER, HOW WE CAN MAKE THIS PLUGIN BETTER!*
+*LET ME KNOW YOUR IMPROVEMENT SUGGESTIONS - TOGETHER WE CAN MAKE THIS PLUGIN BETTER!*
 
 = Developers =
 You'll love this plugin for its advanced configuration options, hooks, seamless integration, performance and smart blur & sharpen feature!
